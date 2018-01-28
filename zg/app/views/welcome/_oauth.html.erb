@@ -1,0 +1,21 @@
+<%= form_tag zg_git_oauth_path do %>
+  <fieldset class="box tabular">
+    <legend>Github OAuth</legend>
+    <p>
+      <%= label_tag :username do %>
+        Username
+        <span class="required">*</span>
+      <% end %>
+      <%= text_field_tag :username %>
+    </p>
+    <p>
+      <%= label_tag :password do %>
+        Password
+        <span class="required">*</span>
+      <% end %>
+      <%= password_field_tag :password %>
+    </p>
+
+    <%= submit_tag 'Autheticate' %>
+  </fieldset>
+<% end %>
