@@ -7,9 +7,7 @@ class VenturaComment < ActiveRecord::Base
   private
 
   def delete_github_comment
-    user = User.current
-    oauth_token = user.ventura_user.oauth_token
-    client = Octokit::Client.new(access_token: oauth_token)
-    client.delete_comment('phucdh/test_redmine', git_comment_id)
+    repo = journal.issue.project.ventura_project.git_repo_name
+    Zg::GithubAdapter.new.delete_comment(repo, git_comment_id)
   end
 end

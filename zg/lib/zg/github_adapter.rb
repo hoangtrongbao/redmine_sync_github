@@ -3,12 +3,12 @@ module Zg
     ACCESS_TOKEN_NAME = 'Ventura Redmine'.freeze
 
     def initialize
-      @api_client = Octokit::Client
-      exit if User.current.blank?
+      fail if User.current.blank? || User.current.authorized_github?
+      @api_client = Octokit::Client.new(access_token: User.current.ventura_user.oauth_token)
     end
 
-    def create_access_token(username, password)
-      client = @api_client.new(login: username, password: password)
+    def self.create_access_token(username, password)
+      client = Octokit::Client.new(login: username, password: password)
       git_user = client.user
       access_token = client.create_authorization(scopes: %w[repo],
                                                  note: ACCESS_TOKEN_NAME)
@@ -18,6 +18,10 @@ module Zg
                          oauth_id: access_token[:id],
                          oauth_token: access_token[:token])
       true
+    end
+
+    def delete_comment(repo, comment_id)
+      @api_client.delete_comment(repo, comment_id)
     end
   end
 end
