@@ -2,9 +2,10 @@ module Zg
   class GithubAdapter
     ACCESS_TOKEN_NAME = 'Ventura Redmine'.freeze
 
-    def initialize
+    def initialize(repo = nil)
       fail if User.current.blank? || User.current.authorized_github?
       @api_client = Octokit::Client.new(access_token: User.current.ventura_user.oauth_token)
+      @repo = repo
     end
 
     def self.create_access_token(username, password)
@@ -20,8 +21,16 @@ module Zg
       true
     end
 
-    def delete_comment(repo, comment_id)
-      @api_client.delete_comment(repo, comment_id)
+    def create_issue(title, description)
+      @api_client.create_issue(@repo, title, description)
+    end
+
+    def update_comment(comment_id, content)
+      @api_client.update_comment(@repo, comment_id, content)
+    end
+
+    def delete_comment(comment_id)
+      @api_client.delete_comment(@repo, comment_id)
     end
   end
 end

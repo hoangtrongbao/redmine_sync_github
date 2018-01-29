@@ -8,6 +8,6 @@ class VenturaComment < ActiveRecord::Base
 
   def delete_github_comment
     repo = journal.issue.project.ventura_project.git_repo_name
-    Zg::GithubAdapter.new.delete_comment(repo, git_comment_id)
+    Zg::GithubAdapter.new(repo).delete_comment(git_comment_id)
   end
 end

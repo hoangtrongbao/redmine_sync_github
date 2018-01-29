@@ -11,12 +11,10 @@ module Zg
 
       module InstanceMethods
         def update_github_comment
-          user = User.current
-          oauth_token = user.ventura_user.oauth_token
-          client = Octokit::Client.new(access_token: oauth_token)
-          client.update_comment('phucdh/test_redmine',
-                                ventura_comment.git_comment_id,
-                                notes)
+          repo = issue.project.ventura_project.git_repo_name
+          github_adapter = Zg::GithubAdapter.new(repo)
+          github_adapter.update_comment(ventura_comment.git_comment_id,
+                                        notes)
         end
       end
     end
