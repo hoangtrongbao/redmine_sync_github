@@ -18,13 +18,11 @@ module Zg
         end
 
         def build_git_repo_url
+          return if @project.errors.any?
           git_repo_url = params[:project][:git_repo_url]
-          git_repo_name = git_repo_url.sub('https://github.com/', '') if git_repo_url.present?
-          return if @project.errors.any? || git_repo_url.blank?
+          git_repo_name = git_repo_url.sub('https://github.com/', '')
           # @TODO: Check if ventura project exist?
-          VenturaProject.create(project: @project,
-                                git_repo_url: git_repo_url,
-                                git_repo_name: git_repo_name)
+          @project.build_ventura_project(git_repo_url: git_repo_url, git_repo_name: git_repo_name).save
         end
       end
     end
