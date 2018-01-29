@@ -14,11 +14,11 @@ Redmine::Plugin.register :zg do
   #      caption: 'Github OAuth'
 end
 
-# project_module :zg do
-#
-# end
-
 ActionDispatch::Callbacks.to_prepare do
   require 'zg/hooks/controller_issues_hooks'
   require 'zg/hooks/view_welcome_hooks'
+  require 'zg/hooks/view_projects_hooks'
+  require 'zg/patches/project_patch'
+  require 'zg/patches/projects_controller_patch'
+  require 'zg/patches/user_patch'
 end

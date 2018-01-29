@@ -1,0 +1,8 @@
+<p>
+  <%= label_tag 'project[git_repo_url]' do %>
+    Respository URL
+  <% end %>
+  <%= text_field_tag 'project[git_repo_url]',
+                     project.ventura_project.try(:git_repo_url),
+                     size: 60 %>
+</p>
