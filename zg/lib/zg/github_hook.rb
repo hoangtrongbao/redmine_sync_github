@@ -1,9 +1,13 @@
 module Zg
-  class GithubServices
+  class GithubHook
     attr_accessor :payload
 
     def initialize(payload)
       @payload = payload
+    end
+
+    def process
+
     end
 
     def process_issue

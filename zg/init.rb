@@ -17,6 +17,7 @@ end
 ActionDispatch::Callbacks.to_prepare do
   require 'zg/hooks/controller_issues_hooks'
   require 'zg/hooks/view_welcome_hooks'
+  require 'zg/hooks/view_my_hooks'
   require 'zg/hooks/view_projects_hooks'
   require 'zg/patches/project_patch'
   require 'zg/patches/projects_controller_patch'

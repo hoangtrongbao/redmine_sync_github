@@ -4,11 +4,19 @@ module Zg
       def self.included(base)
         base.send(:include, InstanceMethods)
         base.class_eval do
-          after_action :save_git_repo_url, only: %i[create update]
+          before_action :validate_github_authorized
+          after_action :build_git_repo_url, only: %i[create update]
         end
       end
 
       module InstanceMethods
+        def validate_github_authorized
+          return if User.current.blank?
+          return if User.current.authorized_github?
+          flash[:error] = 'Please authorize your account with Github'
+          redirect_to home_path
+        end
+
         def build_git_repo_url
           git_repo_url = params[:project][:git_repo_url]
           return if @project.errors.any? || git_repo_url.blank?

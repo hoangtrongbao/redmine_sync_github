@@ -2,17 +2,16 @@ class GitHookController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def oauth
-    client = Octokit::Client.new(login: oauth_params[:username],
-                                 password: oauth_params[:password])
-    client_user = client.user
-    oauth_token = client.create_authorization(:scopes => %w[repo],
-                                              :note => 'Ventura Redmine')
-    VenturaUser.create(user: User.current,
-                       git_login: client_user[:login],
-                       git_login_id: client_user[:id],
-                       oauth_id: oauth_token[:id],
-                       oauth_token: oauth_token[:token])
-    flash[:notice] = 'Authorized successfully'
+    github_adapter = Zg::GithubAdapter.new
+
+    begin
+      github_adapter.create_access_token(oauth_params[:username],
+                                         oauth_params[:password])
+      flash[:notice] = 'Authorized successfully'
+    rescue Octokit::Unauthorized => e
+      flash[:error] = e.message
+    end
+
     redirect_to home_path
   end
 
@@ -47,7 +46,7 @@ class GitHookController < ApplicationController
   private
 
   def oauth_params
-    params.permit(:username, :password)
+    params.require(:zg).permit(:username, :password)
   end
 
   # Fetch data from redmine
