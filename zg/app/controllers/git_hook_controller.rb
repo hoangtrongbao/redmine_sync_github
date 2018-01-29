@@ -28,12 +28,17 @@ class GitHookController < ApplicationController
 
         @issue.save!
       end
-
-      if params['comment'].present?
+    when 'issue_comment'
+      if params['action'] == 'created'
         update_issue_from_params
         Issue.transaction do
           @issue.save
+          VenturaComment.create(journal_id: @issue.last_journal_id,
+                                git_comment_id: git_payload['comment']['id'])
         end
+      end
+      if params['action'] == 'deleted'
+        VenturaComment.find_by(git_comment_id: git_payload['comment']['id']).destroy
       end
     end
     render json: 'success', status: 200
@@ -60,11 +65,13 @@ class GitHookController < ApplicationController
   # from the params
   def update_issue_from_params
     @issue = Issue.last
-    @time_entry = TimeEntry.new(:issue => @issue, :project => @issue.project)
+    @time_entry = TimeEntry.new(issue: @issue, project: @issue.project)
 
-    @issue.init_journal(User.first)
+    git_user_id = git_payload['comment']['user']['id']
+    user = VenturaUser.find_by(git_login_id: git_user_id).try(:user)
+    @issue.init_journal(user)
 
-    @issue.notes = parse_payload['comment']['body']
+    @issue.notes = git_payload['comment']['body']
     true
   end
 

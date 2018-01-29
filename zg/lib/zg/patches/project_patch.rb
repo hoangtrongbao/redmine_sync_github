@@ -1,6 +1,6 @@
 module Zg
   module Patches
-    module ProjectsPatch
+    module ProjectPatch
       def self.included(base)
         base.class_eval do
           has_one :ventura_project, dependent: :destroy
@@ -10,6 +10,6 @@ module Zg
   end
 end
 
-unless Project.included_modules.include?(Zg::Patches::ProjectsPatch)
-  Project.send(:include, Zg::Patches::ProjectsPatch)
+unless Project.included_modules.include?(Zg::Patches::ProjectPatch)
+  Project.send(:include, Zg::Patches::ProjectPatch)
 end
