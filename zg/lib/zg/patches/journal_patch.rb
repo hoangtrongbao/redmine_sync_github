@@ -3,6 +3,7 @@ module Zg
     module JournalPatch
       def self.included(base)
         base.class_eval do
+          unloadable
           has_one :ventura_comment, dependent: :destroy
         end
       end

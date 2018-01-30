@@ -4,6 +4,7 @@ module Zg
       def self.included(base)
         base.send(:include, InstanceMethods)
         base.class_eval do
+          unloadable
           has_one :ventura_user, dependent: :destroy
         end
       end

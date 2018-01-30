@@ -3,6 +3,7 @@ module Zg
     module ProjectPatch
       def self.included(base)
         base.class_eval do
+          unloadable
           has_one :ventura_project, dependent: :destroy
         end
       end
