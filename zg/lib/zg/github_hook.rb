@@ -51,11 +51,13 @@ module Zg
       return false if find_project.blank? || issue_exist?
       issue = Issue.new
       issue.project = find_project
+      # @TODO: Map user between Github and Redmine
       issue.author = User.current
       issue.start_date ||= User.current.today if Setting.default_issue_start_date_to_creation_date?
       issue.subject = @payload['issue']['title']
+      # @TODO: Need mapping for each project
       issue.status_id = 1 # New issue
-      issue.description = @payload['issue']['body'] if @payload['issue']['body'].present?
+      issue.description = @payload['issue']['body']
 
       if issue.project
         issue.tracker ||= issue.allowed_target_trackers(User.first).first
@@ -99,6 +101,7 @@ module Zg
       git_issue.present? ? git_issue.issue : false
     end
 
+    # @TODO: Map Github user with Redmine
     def find_user; end
 
     def issue_exist?
