@@ -31,7 +31,7 @@ module Zg
       new_issue = new_issue_from_payload
       Issue.transaction do
         new_issue.save!
-        new_issue.build_ventura_issue(git_issue_id: @payload['issue']['id']).save
+        new_issue.build_ventura_issue(git_issue_id: @payload['issue']['number']).save
       end
     end
 
