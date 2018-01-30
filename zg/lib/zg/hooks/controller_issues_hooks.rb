@@ -6,7 +6,7 @@ module Zg
         repo = issue.project.ventura_project.git_repo_name
         github_adapter = Zg::GithubAdapter.new(repo)
         git_issue = github_adapter.create_issue(issue.subject, issue.description)
-        issue.build_ventura_issue(git_issue_id: git_issue['id'])
+        issue.build_ventura_issue(git_issue_id: git_issue['number']).save
       end
 
       def controller_issues_edit_after_save(context = {})
