@@ -18,7 +18,7 @@ module Zg
         git_id = issue.ventura_issue.git_issue_id
         github_adapter.update_issue(git_id,
                                     issue.subject,
-                                    issue.desctiption)
+                                    issue.description)
         if journal.notes.present?
           git_comment = github_adapter.add_comment(git_id,
                                                    journal.notes)
