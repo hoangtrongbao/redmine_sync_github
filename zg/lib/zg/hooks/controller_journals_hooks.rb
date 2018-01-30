@@ -3,7 +3,7 @@ module Zg
     class ControllerJournalsHooks < Redmine::Hook::ViewListener
       def controller_journals_edit_post(context = {})
         journal = context[:journal]
-        issue = context[:issue]
+        issue = journal.issue
         repo = issue.project.ventura_project.git_repo_name
         github_adapter = Zg::GithubAdapter.new(repo)
         git_comment_id = journal.ventura_comment.git_comment_id
