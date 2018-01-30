@@ -29,8 +29,10 @@ module Zg
     def create_issue
       return unless new_issue_from_payload
       new_issue = new_issue_from_payload
-      new_issue.save!
-      new_issue.build_ventura_issue(git_issue_id: @payload['issue']['id']).save
+      Issue.transaction do
+        new_issue.save!
+        new_issue.build_ventura_issue(git_issue_id: @payload['issue']['id']).save
+      end
     end
 
     def create_issue_comment
