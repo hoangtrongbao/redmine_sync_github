@@ -24,6 +24,10 @@ module Zg
       @api_client.create_issue(@repo, title, description)
     end
 
+    def add_comment(issue_id, content)
+      @api_client.add_comment(@repo, issue_id, content)
+    end
+
     def update_comment(comment_id, content)
       @api_client.update_comment(@repo, comment_id, content)
     end
