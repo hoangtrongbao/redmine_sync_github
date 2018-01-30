@@ -6,7 +6,7 @@ class GitHookController < ApplicationController
       Zg::GithubAdapter.create_access_token(oauth_params[:username],
                                          oauth_params[:password])
       flash[:notice] = 'Authorized successfully'
-    rescue Octokit::Unauthorized => e
+    rescue => e
       flash[:error] = e.message
     end
 
