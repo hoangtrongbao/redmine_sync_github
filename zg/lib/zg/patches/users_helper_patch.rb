@@ -1,7 +1,7 @@
 module Zg
   module Patches
     module UsersHelperPatch
-      def self.included(base)
+      def self.prepended(base)
         base.send(:prepend, InstanceMethods)
       end
 
@@ -19,5 +19,5 @@ module Zg
 end
 
 unless UsersHelper.included_modules.include?(Zg::Patches::UsersHelperPatch)
-  UsersHelper.include(Zg::Patches::UsersHelperPatch)
+  UsersHelper.send(:prepend, Zg::Patches::UsersHelperPatch)
 end
