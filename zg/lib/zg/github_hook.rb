@@ -37,9 +37,11 @@ module Zg
 
     def create_issue_comment
       return unless create_issue_comment_from_payload
-      issue_comment = create_issue_comment_from_payload.save!
-      VenturaComment.create(journal_id: issue_comment.last_journal_id,
-                            git_comment_id: @payload['comment']['id'])
+      Issue.transaction do
+        issue_comment = create_issue_comment_from_payload.save!
+        VenturaComment.create(journal_id: issue_comment.last_journal_id,
+                              git_comment_id: @payload['comment']['id'])
+      end
     end
 
     def delete_issue_comment
