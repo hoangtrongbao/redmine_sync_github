@@ -1,0 +1,14 @@
+<div class="box">
+  <h3 class="icon icon-issue">Github</h3>
+  <p>
+    <% if project.ventura_project.present? %>
+      <%= image_tag 'true.png' %> You are connected to Github
+    <% else %>
+      <%= image_tag 'exclamation.png' %> You are not connected to Github
+    <% end %>
+  </p>
+  Please remember:
+  <ul>
+    <li>Authorize every member with Github</li>
+  </ul>
+</div>
