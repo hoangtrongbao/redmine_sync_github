@@ -46,7 +46,7 @@ module Zg
     end
 
     def delete_issue_comment
-      VenturaComment.find_by(git_comment_id: @payload['comment']['id']).destroy
+      VenturaComment.find_by(git_comment_id: @payload['comment']['id']).destroy if issue_comment_exist?
     end
 
     # rubocop:disable Metrics/AbcSize
