@@ -39,7 +39,7 @@ module Zg
       return unless create_issue_comment_from_payload
       Issue.transaction do
         issue_comment = create_issue_comment_from_payload.save!
-        VenturaComment.create(journal_id: issue_comment.last_journal_id,
+        VenturaComment.create(journal_id: issue_comment.current_journal.id,
                               git_comment_id: @payload['comment']['id'])
       end
     end
