@@ -2,17 +2,15 @@ class GitHookController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def oauth
-    github_adapter = Zg::GithubAdapter.new
-
     begin
-      github_adapter.create_access_token(oauth_params[:username],
+      Zg::GithubAdapter.create_access_token(oauth_params[:username],
                                          oauth_params[:password])
       flash[:notice] = 'Authorized successfully'
     rescue Octokit::Unauthorized => e
       flash[:error] = e.message
     end
 
-    redirect_to home_path
+    redirect_to edit_user_path(User.current, tab: 'git_oauth')
   end
 
   def index

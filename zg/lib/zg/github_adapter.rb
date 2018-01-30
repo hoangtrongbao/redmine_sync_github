@@ -3,7 +3,6 @@ module Zg
     ACCESS_TOKEN_NAME = 'Ventura Redmine'.freeze
 
     def initialize(repo = nil)
-      fail if User.current.blank? || User.current.authorized_github?
       @api_client = Octokit::Client.new(access_token: User.current.ventura_user.oauth_token)
       @repo = repo
     end

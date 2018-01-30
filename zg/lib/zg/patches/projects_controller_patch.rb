@@ -11,10 +11,9 @@ module Zg
 
       module InstanceMethods
         def validate_github_authorized
-          return if User.current.blank?
           return if User.current.authorized_github?
           flash[:error] = 'Please authorize your account with Github'
-          redirect_to home_path
+          redirect_to edit_user_path(User.current, tab: 'git_oauth')
         end
 
         def build_git_repo_url
