@@ -1,10 +1,7 @@
 <p>
-  <%= label_tag :github_status  %>
-  <span class="github_status">
-    <% if User.current.authorized_github? %>
-    <span class="flash notice">Authorized</span>
-    <% else %>
-    <span>Not Authorized</span>
-    <% end %>
-  </span>
+  <%= label_tag :github_authorzied  %>
+  <%= check_box_tag :github_authorzied,
+                    nil,
+                    User.current.authorized_github?,
+                    disabled: true %>
 </p>
