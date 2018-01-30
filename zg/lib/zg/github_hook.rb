@@ -37,8 +37,9 @@ module Zg
 
     def create_issue_comment
       return unless create_issue_comment_from_payload
+      issue_comment = create_issue_comment_from_payload
       Issue.transaction do
-        issue_comment = create_issue_comment_from_payload.save!
+        issue_comment.save!
         VenturaComment.create(journal_id: issue_comment.current_journal.id,
                               git_comment_id: @payload['comment']['id'])
       end
@@ -101,7 +102,7 @@ module Zg
     end
 
     def find_issue
-      git_issue = VenturaIssue.find_by(git_issue_id: @payload['issue']['id'])
+      git_issue = VenturaIssue.find_by(git_issue_id: @payload['issue']['number'])
       git_issue.present? ? git_issue.issue : false
     end
 
@@ -109,7 +110,7 @@ module Zg
     def find_user; end
 
     def issue_exist?
-      git_issue_id = @payload['issue']['id']
+      git_issue_id = @payload['issue']['number']
       VenturaIssue.find_by(git_issue_id: git_issue_id).present?
     end
 
