@@ -10,6 +10,10 @@ module Zg
       end
 
       module InstanceMethods
+        def git_repo_name
+          ventura_project.git_repo_name
+        end
+
         def sync_with_github?
           ventura_project.present? && ventura_project.git_repo_name.present?
         end

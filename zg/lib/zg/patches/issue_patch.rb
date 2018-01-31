@@ -10,7 +10,9 @@ module Zg
       end
 
       module InstanceMethods
-
+        def git_issue_number
+          ventura_issue.git_issue_number
+        end
       end
     end
   end
