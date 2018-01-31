@@ -1,10 +1,14 @@
 module Zg
   class GithubAdapter
+    attr_accessor :api_client, :issue, :repo, :git_issue_number
+
     ACCESS_TOKEN_NAME = 'Ventura Redmine'.freeze
 
-    def initialize(repo = nil)
+    def initialize(issue)
       @api_client = Octokit::Client.new(access_token: User.current.ventura_user.oauth_token)
-      @repo = repo
+      @issue = issue
+      @repo = issue.project.ventura_project.git_repo_name
+      @git_issue_number = issue.ventura_issue.git_issue_number
     end
 
     def self.create_access_token(username, password)
@@ -20,24 +24,28 @@ module Zg
       true
     end
 
-    def create_issue(title, description)
-      @api_client.create_issue(@repo, title, description)
+    def create_issue
+      git_issue = api_client.create_issue(repo, issue.subject, issue.description)
+      git_issue.build_ventura_issue(git_issue_number: git_issue['number']).save
     end
 
-    def update_issue(issue_id, title, body, options = {})
-      @api_client.update_issue(@repo, issue_id, title, body, options)
+    def update_issue
+      api_client.update_issue(repo, git_issue_number, issue.subject, issue.description)
     end
 
-    def add_comment(issue_id, content)
-      @api_client.add_comment(@repo, issue_id, content)
+    def add_comment(journal)
+      git_comment = api_client.add_comment(repo, git_issue_number, journal.notes)
+      journal.build_ventura_comment(git_comment_id: git_comment['id']).save
     end
 
-    def update_comment(comment_id, content)
-      @api_client.update_comment(@repo, comment_id, content)
+    def update_comment(journal)
+      git_comment_id = journal.ventura_comment.git_comment_id
+      api_client.update_comment(repo, git_comment_id, journal.notes)
     end
 
-    def delete_comment(comment_id)
-      @api_client.delete_comment(@repo, comment_id)
+    def delete_comment(journal)
+      git_comment_id = journal.ventura_comment.git_comment_id
+      api_client.delete_comment(repo, git_comment_id)
     end
   end
 end

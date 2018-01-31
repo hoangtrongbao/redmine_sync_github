@@ -11,32 +11,46 @@ module Zg
     # rubocop:disable Metrics/CyclomaticComplexity
     # rubocop:disable Metrics/AbcSize
     # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Metrics/LineLength
     def process
-      project = @payload['repository']['full_name']
-      issue_data = @payload['issue']
+      issue_id = issue_payload['id']
       case @event
       when 'issues'
         issue_sync = Zg::Synchronizer::Github::Issue
         case @payload['action']
         when 'opened'
-          issue_sync.create(project, issue_data)
+          issue_sync.create(repository_payload, issue_payload)
         when 'edited'
-          issue_sync.new(issue_data['id'], project).update(@payload['changes'], issue_data)
+          issue_sync.new(issue_id, repository_payload).update(@payload['changes'], issue_payload)
         end
       when 'issue_comment'
         comment_sync = Zg::Synchronizer::Github::IssueComment
+        comment_id = comment_payload['id']
         case @payload['action']
         when 'created'
-          comment_sync.create(issue_data['id'], project, @payload['comment'])
+          comment_sync.create(issue_id, repository_payload, @payload['comment'])
         when 'edited'
-          comment_sync.new(issue_data['id'], project, @payload['comment']['id']).update(@payload['comment'])
+          comment_sync.new(issue_id, repository_payload, comment_id).update(comment_payload)
         when 'deleted'
-          comment_sync.new(issue_data['id'], project, @payload['comment']['id']).destroy
+          comment_sync.new(issue_id, repository_payload, comment_id).destroy
         end
       end
     end
     # rubocop:enable Metrics/MethodLength
     # rubocop:enable Metrics/AbcSize
     # rubocop:enable Metrics/CyclomaticComplexity
+    # rubocop:enable Metrics/LineLength
+
+    def comment_payload
+      @payload['comment']
+    end
+
+    def repository_payload
+      @payload['repository']['full_name']
+    end
+
+    def issue_payload
+      @payload['issue']
+    end
   end
 end

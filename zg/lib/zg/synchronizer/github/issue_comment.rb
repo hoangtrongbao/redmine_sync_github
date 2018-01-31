@@ -5,7 +5,7 @@ require 'zg/synchronizer/github/issue'
 module Zg
   module Synchronizer
     module Github
-      class IssueComment < Issue
+      class IssueComment
         attr_accessor :issue, :project, :id
 
         def initialize(issue, project, id)
@@ -58,6 +58,7 @@ module Zg
         end
 
         def destroy
+          return false unless IssueComment.find(id)
           IssueComment.find(id).destroy
         end
       end
