@@ -51,7 +51,7 @@ module Zg
       issue_id = issue_payload['id']
       case action
       when 'created'
-        comment_sync.create(issue_id, repository_payload, @payload['comment'])
+        comment_sync.create(issue_id, repository_payload, comment_payload)
       when 'edited'
         comment_sync.new(issue_id, repository_payload, comment_id).update(comment_payload)
       when 'deleted'
