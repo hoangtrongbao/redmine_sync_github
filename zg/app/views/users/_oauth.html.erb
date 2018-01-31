@@ -1,4 +1,4 @@
-<%# unless User.current.authorized_github? %>
+<%= unless User.current.authorized_github? %>
   <%= form_tag zg_git_oauth_path do %>
     <fieldset class="box tabular">
       <legend>Github OAuth</legend>
@@ -20,4 +20,4 @@
       <%= submit_tag 'Authenticate' %>
     </fieldset>
   <% end %>
-<%# end %>
+<%= end %>
