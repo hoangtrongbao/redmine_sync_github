@@ -1,4 +1,6 @@
-<%= unless User.current.authorized_github? %>
+<% if User.current.authorized_github? %>
+  <div class="flash notice success">You authorized with Github</div>
+<% else %>
   <%= form_tag zg_git_oauth_path do %>
     <fieldset class="box tabular">
       <legend>Github OAuth</legend>
@@ -20,4 +22,4 @@
       <%= submit_tag 'Authenticate' %>
     </fieldset>
   <% end %>
-<%= end %>
+<% end %>
