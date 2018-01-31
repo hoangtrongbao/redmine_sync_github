@@ -40,8 +40,7 @@ module Zg
       issue_comment = create_issue_comment_from_payload
       Issue.transaction do
         issue_comment.save!
-        VenturaComment.create(journal_id: issue_comment.current_journal.id,
-                              git_comment_id: @payload['comment']['id'])
+        issue_comment.build_ventura_comment(git_comment_id: @payload['comment']['id']).save
       end
     end
 
