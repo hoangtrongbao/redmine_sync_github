@@ -7,22 +7,28 @@ module Zg
       @payload = payload
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def process
       case @event
       when 'issues'
         case @payload['action']
         when 'opened'
           create_issue
+        when 'edited'
+          edit_issue
         end
       when 'issue_comment'
         case @payload['action']
         when 'created'
           create_issue_comment
+        when 'edited'
+          update_issue_comment
         when 'deleted'
           delete_issue_comment
         end
       end
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     private
 
@@ -35,6 +41,18 @@ module Zg
       end
     end
 
+    # rubocop:disable Metrics/LineLength
+    def edit_issue
+      return false unless find_project && find_issue
+      key_changes = @payload['changes'].keys
+      issue = find_issue
+      issue.subject = @payload['issue']['title'] if key_changes.include?('title')
+      issue.description = @payload['issue']['body'] if key_changes.include?('body')
+      issue.save!
+    end
+    # rubocop:enable Metrics/LineLength
+
+    # rubocop:disable Metrics/LineLength
     def create_issue_comment
       return unless create_issue_comment_from_payload
       issue_comment = create_issue_comment_from_payload
@@ -42,6 +60,14 @@ module Zg
         issue_comment.save!
         issue_comment.current_journal.build_ventura_comment(git_comment_id: @payload['comment']['id']).save
       end
+    end
+    # rubocop:enable Metrics/LineLength
+
+    def update_issue_comment
+      return unless find_issue && find_issue_comment
+      git_comment = VenturaComment.find_by(git_comment_id: @payload['comment']['id'])
+      return unless git_comment
+      git_comment.journal.update(notes: @payload['comment']['body'])
     end
 
     def delete_issue_comment
@@ -52,7 +78,7 @@ module Zg
     # rubocop:disable Metrics/CyclomaticComplexity
     # rubocop:disable Metrics/PerceivedComplexity
     def new_issue_from_payload
-      return false if find_project.blank? || issue_exist?
+      return false if !find_project || find_issue
       issue = Issue.new
       issue.project = find_project
       # @TODO: Map user between Github and Redmine
@@ -84,7 +110,7 @@ module Zg
     # rubocop:enable Metrics/PerceivedComplexity
 
     def create_issue_comment_from_payload
-      return false if find_issue.blank? || issue_comment_exist?
+      return false if !find_issue || find_issue_comment
       issue = find_issue
       TimeEntry.new(issue: issue, project: issue.project)
 
@@ -97,25 +123,20 @@ module Zg
 
     def find_project
       git_project = VenturaProject.find_by(git_repo_name: @payload['repository']['full_name'])
-      git_project.present? ? git_project.project : false
+      git_project.try(:project)
     end
 
     def find_issue
       git_issue = VenturaIssue.find_by(git_issue_id: @payload['issue']['number'])
-      git_issue.present? ? git_issue.issue : false
+      git_issue.try(:issue)
     end
 
     # @TODO: Map Github user with Redmine
     def find_user; end
 
-    def issue_exist?
-      git_issue_id = @payload['issue']['number']
-      VenturaIssue.find_by(git_issue_id: git_issue_id).present?
-    end
-
-    def issue_comment_exist?
-      git_comment_id = @payload['comment']['id']
-      VenturaComment.find_by(git_comment_id: git_comment_id).present?
+    def find_issue_comment
+      git_comment = @payload['comment']['id']
+      VenturaComment.find_by(git_comment_id: git_comment)
     end
   end
 end
