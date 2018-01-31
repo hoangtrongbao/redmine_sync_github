@@ -40,8 +40,18 @@ module Zg
               end
             end
           end
-          # rubocop:enable Metrics/AbcSize
-          # rubocop:enable Metrics/MethodLength
+        end
+
+        def assign_label(label)
+          return false unless can_update?
+
+          map_label
+
+          name = label['name']
+        end
+
+        def map_label
+           @label_config = YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
         end
 
         def can_create?

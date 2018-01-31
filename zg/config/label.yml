@@ -1,0 +1,5 @@
+Haken:
+  priority:
+    'Priority・Low': 1
+    'Priority・Med': 2
+    'Priority・High': 3
