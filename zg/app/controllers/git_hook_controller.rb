@@ -4,7 +4,7 @@ class GitHookController < ApplicationController
   def oauth
     begin
       Zg::GithubAdapter.create_access_token(oauth_params[:username],
-                                         oauth_params[:password])
+                                            oauth_params[:password])
       flash[:notice] = 'Authorized successfully'
     rescue => e
       flash[:error] = e.message

@@ -1,3 +1,4 @@
+# @TODO: Refactor this class
 module Zg
   class GithubHook
     attr_accessor :event, :payload
@@ -42,15 +43,18 @@ module Zg
     end
 
     # rubocop:disable Metrics/LineLength
+    # rubocop:disable Metrics/AbcSize
     def edit_issue
       return false unless find_project && find_issue
       key_changes = @payload['changes'].keys
       issue = find_issue
+      issue.init_journal(find_issue_user)
       issue.subject = @payload['issue']['title'] if key_changes.include?('title')
       issue.description = @payload['issue']['body'] if key_changes.include?('body')
       issue.save!
     end
     # rubocop:enable Metrics/LineLength
+    # rubocop:enable Metrics/AbcSize
 
     # rubocop:disable Metrics/LineLength
     def create_issue_comment
@@ -75,15 +79,12 @@ module Zg
     end
 
     # rubocop:disable Metrics/AbcSize
-    # rubocop:disable Metrics/CyclomaticComplexity
-    # rubocop:disable Metrics/PerceivedComplexity
     def new_issue_from_payload
       return false if !find_project || find_issue
       issue = Issue.new
       issue.project = find_project
       # @TODO: Map user between Github and Redmine
-      issue.author = User.current
-      issue.start_date ||= User.current.today if Setting.default_issue_start_date_to_creation_date?
+      issue.author = find_issue_user
       issue.subject = @payload['issue']['title']
       # @TODO: Need mapping for each project
       issue.status_id = 1 # New issue
@@ -106,17 +107,12 @@ module Zg
       issue
     end
     # rubocop:enable Metrics/AbcSize
-    # rubocop:enable Metrics/CyclomaticComplexity
-    # rubocop:enable Metrics/PerceivedComplexity
 
     def create_issue_comment_from_payload
       return false if !find_issue || find_issue_comment
       issue = find_issue
       TimeEntry.new(issue: issue, project: issue.project)
-
-      git_user_id = @payload['comment']['user']['id']
-      user = VenturaUser.find_by(git_login_id: git_user_id).try(:user)
-      issue.init_journal(user)
+      issue.init_journal(find_comment_user)
       issue.notes = @payload['comment']['body']
       issue
     end
@@ -132,7 +128,15 @@ module Zg
     end
 
     # @TODO: Map Github user with Redmine
-    def find_user; end
+    def find_issue_user
+      git_user_id = @payload['issue']['user']['id']
+      VenturaUser.find_by(git_login_id: git_user_id).try(:user)
+    end
+
+    def find_comment_user
+      git_user_id = @payload['comment']['user']['id']
+      VenturaUser.find_by(git_login_id: git_user_id).try(:user)
+    end
 
     def find_issue_comment
       git_comment = @payload['comment']['id']
