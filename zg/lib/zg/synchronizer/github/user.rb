@@ -3,9 +3,11 @@ module Zg
     module Github
       class User
         class << self
-          def find(id)
-            VenturaUser.find_by(git_login_id: id).try(:user)
+          # rubocop:disable Metrics/LineLength
+          def find(id, login = nil)
+            VenturaUser.find_by(git_login_id: id).try(:user) || ::User.find_by_login(login)
           end
+          # rubocop:enable Metrics/LineLength
         end
       end
     end
