@@ -33,6 +33,12 @@ module Zg
             ::Issue.transaction do
               ::Issue.new.tap do |issue|
                 author = User.find(args['user']['id'])
+                notes = ''
+                if author.blank?
+                  author = AnonymousUser.first
+                  notes = "Created by #{link_to(args['user']['login'], args['user']['html_url'])}"
+                end
+                issue.init_journal(author, notes) if notes.present?
                 issue.project = issue_sync.project
                 issue.author = author
                 issue.subject = args['title']
