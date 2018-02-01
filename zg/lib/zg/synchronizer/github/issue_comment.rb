@@ -32,8 +32,14 @@ module Zg
             return false unless comment.can_create?
             ::Issue.transaction do
               ::TimeEntry.new(issue: issue, project: issue.project)
-              issue.init_journal(User.find(args['user']['id']))
-              issue.notes = args['body']
+              author = User.find(args['user']['id'])
+              notes = args['body']
+              if author.blank?
+                author = AnonymousUser.first
+                notes = args['body'] + "\nCreated by #{link_to(args['user']['login'], args['user']['html_url'])}"
+              end
+              issue.init_journal(author)
+              issue.notes = notes
               issue.save!
               issue.current_journal.build_ventura_comment(git_comment_id: args['id']).save
             end
@@ -50,12 +56,18 @@ module Zg
           IssueComment.exist?(id)
         end
 
-        def update(args)
+        # rubocop:disable Metrics/AbcSize
+        def update(args, user)
           IssueComment.find(id).tap do |comment|
-            comment.notes = args['body']
+            notes = args['body']
+            if User.find(user['id']).blank?
+              notes = args['body'] + "\nUpdated by #{link_to(args['user']['login'], args['user']['html_url'])}"
+            end
+            comment.notes = notes
             comment.save!
           end
         end
+        # rubocop:enable Metrics/AbcSize
 
         def destroy
           return false unless IssueComment.find(id)

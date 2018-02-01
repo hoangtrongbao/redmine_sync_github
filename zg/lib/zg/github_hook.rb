@@ -63,7 +63,7 @@ module Zg
       when 'created'
         comment_sync.create(issue_id, repository_payload, comment_payload)
       when 'edited'
-        comment_sync.new(issue_id, repository_payload, comment_id).update(comment_payload)
+        comment_sync.new(issue_id, repository_payload, comment_id).update(comment_payload, user_payload)
       when 'deleted'
         comment_sync.new(issue_id, repository_payload, comment_id).destroy
       end
