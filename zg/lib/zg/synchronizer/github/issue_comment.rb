@@ -34,8 +34,7 @@ module Zg
               ::TimeEntry.new(issue: issue, project: issue.project)
               author = User.find(args['user']['id'])
               notes = args['body']
-              if author.blank?
-                author = AnonymousUser.first
+              if author.is_a?(AnonymousUser)
                 notes = args['body'] + "\nCreated by #{link_to(args['user']['login'], args['user']['html_url'])}"
               end
               issue.init_journal(author)
@@ -60,7 +59,7 @@ module Zg
         def update(args, user)
           IssueComment.find(id).tap do |comment|
             notes = args['body']
-            if User.find(user['id']).blank?
+            if User.find(user['id']).is_a?(AnonymousUser)
               notes = args['body'] + "\nUpdated by #{link_to(args['user']['login'], args['user']['html_url'])}"
             end
             comment.notes = notes

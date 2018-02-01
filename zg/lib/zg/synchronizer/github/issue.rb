@@ -34,8 +34,7 @@ module Zg
               ::Issue.new.tap do |issue|
                 author = User.find(args['user']['id'])
                 notes = ''
-                if author.blank?
-                  author = AnonymousUser.first
+                if author.is_a?(AnonymousUser)
                   notes = "Created by #{link_to(args['user']['login'], args['user']['html_url'])}"
                 end
                 issue.init_journal(author, notes) if notes.present?
@@ -131,23 +130,24 @@ module Zg
         end
 
         # rubocop:disable Metrics/LineLength
+        # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
         def update(diffs, edit_user, args)
           return false unless can_update?
           diffs_keys = diffs.keys
           Issue.find(id).tap do |issue|
             author = User.find(edit_user['id'])
-            notes = ''
-            if author.blank?
+            if author.is_a?(AnonymousUser)
               author = issue.author
               notes = "Edited by #{link_to(edit_user['login'], edit_user['html_url'])}"
             end
-            issue.init_journal(author, notes)
+            issue.init_journal(author, (notes || ''))
             issue.subject = args['title'] if diffs_keys.include?('title')
             issue.description = args['body'] if diffs_keys.include?('body')
             issue.save!
           end
         end
+        # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/LineLength
       end
