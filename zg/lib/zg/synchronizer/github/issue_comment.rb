@@ -6,10 +6,12 @@ module Zg
   module Synchronizer
     module Github
       class IssueComment
-        delegate :url_helpers, to: 'Rails.application.routes'
-        include ActionView::Helpers::UrlHelper
-
         attr_accessor :issue, :project, :id
+
+        ACTION = {
+          CREATE: 'Created',
+          EDIT: 'Edited'
+        }.freeze
 
         def initialize(issue, project, id)
           @issue = issue
@@ -18,9 +20,6 @@ module Zg
         end
 
         class << self
-          delegate :url_helpers, to: 'Rails.application.routes'
-          include ActionView::Helpers::UrlHelper
-
           def find(id)
             VenturaComment.find_by(git_comment_id: id).try(:journal)
           end
@@ -41,7 +40,7 @@ module Zg
               author = User.find(args['user']['id'])
               notes = args['body']
               if author.is_a?(AnonymousUser)
-                notes = args['body'] + "\nCreated by #{link_to(args['user']['login'], args['user']['html_url'])}"
+                notes = args['body'] + comment.append_git_user_action(args['user'], IssueComment::ACTION::CREATE)
               end
               issue.init_journal(author)
               issue.notes = notes
@@ -61,22 +60,26 @@ module Zg
           IssueComment.exist?(id)
         end
 
-        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/LineLength
         def update(args, user)
           IssueComment.find(id).tap do |comment|
             notes = args['body']
             if User.find(user['id']).is_a?(AnonymousUser)
-              notes = args['body'] + "\nUpdated by #{link_to(args['user']['login'], args['user']['html_url'])}"
+              notes = args['body'] + comment.append_git_user_action(args['user'], IssueComment::ACTION::UPDATE)
             end
             comment.notes = notes
             comment.save!
           end
         end
-        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/LineLength
 
         def destroy
           return false unless IssueComment.find(id)
           IssueComment.find(id).destroy
+        end
+
+        def append_git_user_action(user, action)
+          "\n#{action} by #{user['login']} - #{user['html_url']}"
         end
       end
     end

@@ -5,10 +5,12 @@ module Zg
   module Synchronizer
     module Github
       class Issue
-        delegate :url_helpers, to: 'Rails.application.routes'
-        include ActionView::Helpers::UrlHelper
-
         attr_accessor :id, :project, :user
+
+        ACTION = {
+          CREATE: 'Created',
+          EDIT: 'Edited'
+        }.freeze
 
         def initialize(id, project, user)
           @id = id
@@ -17,9 +19,6 @@ module Zg
         end
 
         class << self
-          delegate :url_helpers, to: 'Rails.application.routes'
-          include ActionView::Helpers::UrlHelper
-
           def find(id)
             VenturaIssue.find_by(git_issue_id: id).try(:issue)
           end
@@ -36,9 +35,8 @@ module Zg
             ::Issue.transaction do
               ::Issue.new.tap do |issue|
                 author = User.find(args['user']['id'])
-                notes = ''
                 if author.is_a?(AnonymousUser)
-                  notes = "Created by #{link_to(args['user']['login'], args['user']['html_url'])}"
+                  notes = issue_sync.append_git_user_action(args['user'], Issue::ACTION::CREATE)
                 end
                 issue.init_journal(author, notes) if notes.present?
                 issue.project = issue_sync.project
@@ -132,7 +130,6 @@ module Zg
           project.present? && Issue.exist?(id)
         end
 
-        # rubocop:disable Metrics/LineLength
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
         def update(diffs, edit_user, args)
@@ -142,7 +139,7 @@ module Zg
             author = User.find(edit_user['id'])
             if author.is_a?(AnonymousUser)
               author = issue.author
-              notes = "Edited by #{link_to(edit_user['login'], edit_user['html_url'])}"
+              notes = append_git_user_action(edit_user, Issue::ACTION::CREATE)
             end
             issue.init_journal(author, (notes || ''))
             issue.subject = args['title'] if diffs_keys.include?('title')
@@ -152,7 +149,10 @@ module Zg
         end
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
-        # rubocop:enable Metrics/LineLength
+
+        def append_git_user_action(user, action)
+          "#{action} by #{user['login']} - #{user['html_url']}"
+        end
       end
     end
   end
