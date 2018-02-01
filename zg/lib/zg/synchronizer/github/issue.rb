@@ -8,11 +8,12 @@ module Zg
         delegate :url_helpers, to: 'Rails.application.routes'
         include ActionView::Helpers::UrlHelper
 
-        attr_accessor :id, :project
+        attr_accessor :id, :project, :user
 
-        def initialize(id, project)
+        def initialize(id, project, user)
           @id = id
           @project = project
+          @user = User.find(user['id'])
         end
 
         class << self
@@ -52,7 +53,7 @@ module Zg
           priority = get_priority(git_label['name'])
           tracker = get_tracker(git_label['name'])
 
-          update_label(args, priority, tracker)
+          update_label(priority, tracker)
         end
 
         def delete_label(git_label, args)
@@ -65,12 +66,12 @@ module Zg
           priority = find_priority(args['labels']) if priority.present?
           tracker = find_tracker(args['labels']) if tracker.present?
 
-          update_label(args, priority, tracker)
+          update_label(priority, tracker)
         end
 
-        def update_label(args, priority, tracker)
+        def update_label(priority, tracker)
           Issue.find(id).tap do |issue|
-            issue.init_journal(User.find(args['user']['id']))
+            issue.init_journal(user)
             issue.priority = priority if priority.present?
             issue.tracker = tracker if tracker.present?
             issue.save!
@@ -81,7 +82,7 @@ module Zg
           labels.reverse.each do |label|
             return get_tracker(label['name']) if get_tracker(label['name']).present?
           end
-          Tracker.first
+          Issue.find(id).allowed_target_trackers(user).first
         end
 
         def find_priority(labels)
@@ -107,9 +108,11 @@ module Zg
           { user: git_repo.first.downcase, name: git_repo.last.downcase }
         end
 
+        # rubocop:disable Metrics/LineLength
         def load_label
           YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
         end
+        # rubocop:enable Metrics/LineLength
 
         def can_create?
           project.present? && !Issue.exist?(id)
@@ -119,8 +122,6 @@ module Zg
           project.present? && Issue.exist?(id)
         end
 
-        # rubocop:disable Metrics/AbcSize
-        # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/LineLength
         def update(diffs, edit_user, args)
           return false unless can_update?
@@ -139,8 +140,6 @@ module Zg
           end
         end
         # rubocop:enable Metrics/LineLength
-        # rubocop:enable Metrics/MethodLength
-        # rubocop:enable Metrics/AbcSize
       end
     end
   end
