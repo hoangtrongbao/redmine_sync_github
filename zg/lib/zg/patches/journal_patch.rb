@@ -11,7 +11,7 @@ module Zg
 
       module InstanceMethods
         def git_comment_id
-          ventura_comment.git_comment_id
+          ventura_comment.try(:git_comment_id)
         end
       end
     end

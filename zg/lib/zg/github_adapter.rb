@@ -34,16 +34,19 @@ module Zg
     end
 
     def add_comment(journal)
+      return if git_issue_number.blank?
       git_comment = api_client.add_comment(repo, git_issue_number, journal.notes)
       journal.build_ventura_comment(git_comment_id: git_comment['id']).save
     end
 
     def update_comment(journal)
+      return if git_comment_id.blank?
       git_comment_id = journal.git_comment_id
       api_client.update_comment(repo, git_comment_id, journal.notes)
     end
 
     def delete_comment(journal)
+      return if git_comment_id.blank?
       git_comment_id = journal.git_comment_id
       api_client.delete_comment(repo, git_comment_id)
     end

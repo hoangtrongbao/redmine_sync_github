@@ -11,7 +11,7 @@ module Zg
 
       module InstanceMethods
         def git_issue_number
-          ventura_issue.git_issue_number
+          ventura_issue.try(:git_issue_number)
         end
       end
     end
