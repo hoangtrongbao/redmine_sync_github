@@ -125,6 +125,7 @@ module Zg
         end
 
         # rubocop:disable Metrics/LineLength
+        # rubocop:disable Metrics/AbcSize
         def update(diffs, edit_user, args)
           return false unless can_update?
           diffs_keys = diffs.keys
@@ -141,6 +142,7 @@ module Zg
             issue.save!
           end
         end
+        # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/LineLength
       end
     end
