@@ -9,7 +9,9 @@ module Zg
 
         ACTION = {
           CREATE: 'Created',
-          EDIT: 'Edited'
+          EDIT: 'Edited',
+          CLOSE: 'Closed',
+          REOPEN: 'Reopen'
         }.freeze
 
         def initialize(id, project, user)
@@ -148,6 +150,37 @@ module Zg
             issue.save!
           end
         end
+
+        def close(edit_user, args)
+          return false unless can_update?
+
+          Issue.find(id).tap do |issue|
+            author = User.find(edit_user['id'])
+            if author.is_a?(AnonymousUser)
+              author = issue.author
+              notes = append_git_user_action(edit_user, Issue::ACTION[:CLOSE])
+            end
+            issue.init_journal(author, (notes || ''))
+            issue.status_id = 5
+            issue.save!
+          end
+        end
+
+        def reopen(edit_user, args)
+          return false unless can_update?
+
+          Issue.find(id).tap do |issue|
+            author = User.find(edit_user['id'])
+            if author.is_a?(AnonymousUser)
+              author = issue.author
+              notes = append_git_user_action(edit_user, Issue::ACTION[:REOPEN])
+            end
+            issue.init_journal(author, (notes || ''))
+            issue.status_id = 1
+            issue.save!
+          end
+        end
+
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
 

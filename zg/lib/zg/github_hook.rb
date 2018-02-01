@@ -44,7 +44,11 @@ module Zg
       when 'opened'
         issue_sync.create(repository_payload, issue_payload)
       when 'edited'
-        issue_sync.new(issue_id, repository_payload, user_payload).update(@payload['changes'], issue_payload)
+        issue_sync.new(issue_id, repository_payload, user_payload).update(@payload['changes'], user_payload, issue_payload)
+      when 'closed'
+        issue_sync.new(issue_id, repository_payload, user_payload).close(user_payload, issue_payload)
+      when 'reopened'
+        issue_sync.new(issue_id, repository_payload, user_payload).reopen(user_payload, issue_payload)
       when 'labeled'
         issue_sync.new(issue_id, repository_payload, user_payload).assign_label(@payload['label'], issue_payload)
       when 'unlabeled'
