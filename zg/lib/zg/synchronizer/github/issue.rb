@@ -57,6 +57,7 @@ module Zg
 
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/MethodLength
+        # rubocop:disable Metrics/LineLength
         def update(diffs, edit_user, args)
           return false unless can_update?
           diffs_keys = diffs.keys
@@ -65,7 +66,7 @@ module Zg
             notes = ''
             if author.blank?
               author = issue.author
-              notes = "Edit by #{link_to(edit_user['html_url'])}"
+              notes = "Edited by #{link_to(edit_user['login'], edit_user['html_url'])}"
             end
             issue.init_journal(author, notes)
             issue.subject = args['title'] if diffs_keys.include?('title')
@@ -73,6 +74,7 @@ module Zg
             issue.save!
           end
         end
+        # rubocop:enable Metrics/LineLength
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
       end
