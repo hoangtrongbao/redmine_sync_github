@@ -40,6 +40,7 @@ module Zg
         issue_sync.create(repository_payload, issue_payload)
       when 'edited'
         issue_sync.new(issue_id, repository_payload).update(@payload['changes'],
+                                                            @payload['sender'],
                                                             issue_payload)
       end
     end
