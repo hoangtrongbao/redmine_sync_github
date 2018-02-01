@@ -48,23 +48,69 @@ module Zg
 
         def assign_label(git_label, args)
           return false unless can_update?
+          # Mapping tracker and priority
+          priority = get_priority(git_label['name'])
+          tracker = get_tracker(git_label['name'])
 
-          label_name = git_label['name']
-          git_repo = project.split('/')
-          repo_user = git_repo.first.downcase
-          repo_name = git_repo.last.downcase
-          prioriry = map_label[repo_user][repo_name]['priority'][label_name]
-          tracker = Tracker.find_by(name: label_name)
+          update_label(args, priority, tracker)
+        end
 
+        def delete_label(git_label, args)
+          return false unless can_update?
+          # Mapping tracker and priority
+          priority = get_priority(git_label['name'])
+          tracker = get_tracker(git_label['name'])
+
+          # Find priority and tracker after delete
+          priority = find_priority(args['labels']) if priority.present?
+          tracker = find_tracker(args['labels']) if tracker.present?
+
+          update_label(args, priority, tracker)
+        end
+
+        def update_label(args, priority, tracker)
           Issue.find(id).tap do |issue|
             issue.init_journal(User.find(args['user']['id']))
+            issue.priority = priority if priority.present?
             issue.tracker = tracker if tracker.present?
-            issue.priority = IssuePriority.find_by(name: prioriry) if prioriry.present?
             issue.save!
           end
         end
 
-        def map_label
+        def find_tracker(labels)
+          labels.reverse.each do |label|
+            return get_tracker(label['name']) if get_tracker(label['name']).present?
+          end
+          Tracker.first
+        end
+
+        def find_priority(labels)
+          labels.reverse.each do |label|
+            return get_priority(label['name']) if get_priority(label['name']).present?
+          end
+          IssuePriority.find_by(name: 'Normal')
+        end
+
+        def get_tracker(label_name)
+          Tracker.find_by(name: label_name)
+        end
+
+        def get_priority(label_name)
+          repo_user = git_repository[:user]
+          repo_name = git_repository[:name]
+          priority_name = load_label[repo_user][repo_name]['priority'][label_name]
+          IssuePriority.find_by(name: priority_name)
+        end
+
+        def git_repository
+          repo = {}
+          git_repo = project.split('/')
+          repo[:user] = git_repo.first.downcase
+          repo[:name] = git_repo.last.downcase
+          repo
+        end
+
+        def load_label
            YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
         end
 

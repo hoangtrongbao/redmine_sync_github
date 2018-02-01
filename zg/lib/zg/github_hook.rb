@@ -45,7 +45,7 @@ module Zg
       when 'labeled'
         issue_sync.new(issue_id, repository_payload).assign_label(@payload['label'], issue_payload)
       when 'unlabeled'
-
+        issue_sync.new(issue_id, repository_payload).delete_label(@payload['label'], issue_payload)
       end
     end
 
