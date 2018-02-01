@@ -46,6 +46,8 @@ module Zg
             end
           end
         end
+        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/MethodLength
 
         def assign_label(git_label, args)
           return false unless can_update?
