@@ -26,7 +26,7 @@ module Zg
 
     def create_issue
       git_issue = api_client.create_issue(repo, issue.subject, issue.description)
-      git_issue.build_ventura_issue(git_issue_number: git_issue['number']).save
+      issue.build_ventura_issue(git_issue_number: git_issue['number']).save
     end
 
     def update_issue
