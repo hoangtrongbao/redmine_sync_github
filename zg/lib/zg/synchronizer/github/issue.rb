@@ -44,8 +44,26 @@ module Zg
               end
             end
           end
-          # rubocop:enable Metrics/AbcSize
-          # rubocop:enable Metrics/MethodLength
+        end
+
+        def assign_label(git_label, args)
+          return false unless can_update?
+
+          label_name = git_label['name']
+          repo_name = project.split('/').last
+          prioriry = map_label[repo_name]['priority'][label_name]
+          tracker = Tracker.find_by(name: label_name)
+
+          Issue.find(id).tap do |issue|
+            issue.init_journal(User.find(args['user']['id']))
+            issue.tracker = tracker if tracker.present?
+            issue.priority = IssuePriority.find_by(name: prioriry) if prioriry.present?
+            issue.save!
+          end
+        end
+
+        def map_label
+           YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
         end
 
         def can_create?
