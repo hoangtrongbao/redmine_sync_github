@@ -17,6 +17,9 @@ module Zg
         end
 
         class << self
+          delegate :url_helpers, to: 'Rails.application.routes'
+          include ActionView::Helpers::UrlHelper
+
           def find(id)
             VenturaIssue.find_by(git_issue_id: id).try(:issue)
           end

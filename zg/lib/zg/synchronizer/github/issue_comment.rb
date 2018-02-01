@@ -18,6 +18,9 @@ module Zg
         end
 
         class << self
+          delegate :url_helpers, to: 'Rails.application.routes'
+          include ActionView::Helpers::UrlHelper
+
           def find(id)
             VenturaComment.find_by(git_comment_id: id).try(:journal)
           end
