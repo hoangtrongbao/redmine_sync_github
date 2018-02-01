@@ -46,6 +46,7 @@ module Zg
     end
 
     # rubocop:disable Metrics/AbcSize
+    # rubocop:disable Metrics/MethodLength
     def process_issue_comment
       comment_sync = Zg::Synchronizer::Github::IssueComment
       comment_id = comment_payload['id']
@@ -59,6 +60,7 @@ module Zg
         comment_sync.new(issue_id, repository_payload, comment_id).destroy
       end
     end
+    # rubocop:enable Metrics/MethodLength
     # rubocop:enable Metrics/AbcSize
   end
 end
