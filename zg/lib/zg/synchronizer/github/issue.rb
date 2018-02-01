@@ -35,15 +35,16 @@ module Zg
             ::Issue.transaction do
               ::Issue.new.tap do |issue|
                 author = User.find(args['user']['id'])
+                description = args['body']
                 if author.is_a?(AnonymousUser)
-                  notes = issue_sync.append_git_user_action(args['user'], Issue::ACTION::CREATE)
+                  description += issue_sync.append_git_user_action(args['user'], Issue::ACTION::CREATE)
                 end
                 issue.init_journal(author, notes) if notes.present?
                 issue.project = issue_sync.project
                 issue.author = author
                 issue.subject = args['title']
                 issue.status_id = 1
-                issue.description = args['body']
+                issue.description = description
                 issue.tracker = issue.allowed_target_trackers(author).first
                 issue.save!
                 issue.build_ventura_issue(git_issue_id: args['id'],

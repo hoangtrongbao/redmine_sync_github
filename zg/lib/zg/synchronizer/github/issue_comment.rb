@@ -40,7 +40,7 @@ module Zg
               author = User.find(args['user']['id'])
               notes = args['body']
               if author.is_a?(AnonymousUser)
-                notes = args['body'] + comment.append_git_user_action(args['user'], IssueComment::ACTION::CREATE)
+                notes += comment.append_git_user_action(args['user'], IssueComment::ACTION::CREATE)
               end
               issue.init_journal(author)
               issue.notes = notes
@@ -65,7 +65,7 @@ module Zg
           IssueComment.find(id).tap do |comment|
             notes = args['body']
             if User.find(user['id']).is_a?(AnonymousUser)
-              notes = args['body'] + comment.append_git_user_action(args['user'], IssueComment::ACTION::UPDATE)
+              notes += comment.append_git_user_action(args['user'], IssueComment::ACTION::UPDATE)
             end
             comment.notes = notes
             comment.save!
