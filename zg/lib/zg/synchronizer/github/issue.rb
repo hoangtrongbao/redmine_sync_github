@@ -140,7 +140,7 @@ module Zg
             author = User.find(edit_user['id'])
             if author.is_a?(AnonymousUser)
               author = issue.author
-              notes = append_git_user_action(edit_user, Issue::ACTION::CREATE)
+              notes = append_git_user_action(edit_user, Issue::ACTION[:EDIT])
             end
             issue.init_journal(author, (notes || ''))
             issue.subject = args['title'] if diffs_keys.include?('title')
