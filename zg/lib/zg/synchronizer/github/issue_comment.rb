@@ -6,6 +6,9 @@ module Zg
   module Synchronizer
     module Github
       class IssueComment
+        delegate :url_helpers, to: 'Rails.application.routes'
+        include ActionView::Helpers::UrlHelper
+
         attr_accessor :issue, :project, :id
 
         def initialize(issue, project, id)
