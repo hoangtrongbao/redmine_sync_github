@@ -26,7 +26,7 @@ module Zg
 
     def create_issue
       git_issue = api_client.create_issue(repo, issue.subject, issue.description)
-      issue.build_ventura_issue(git_issue_number: git_issue['number']).save
+      issue.build_ventura_issue(git_issue_number: git_issue['number'], git_issue_id: git_issue['id']).save
     end
 
     def update_issue
@@ -40,14 +40,14 @@ module Zg
     end
 
     def update_comment(journal)
-      return if git_comment_id.blank?
       git_comment_id = journal.git_comment_id
+      return if git_comment_id.blank?
       api_client.update_comment(repo, git_comment_id, journal.notes)
     end
 
     def delete_comment(journal)
-      return if git_comment_id.blank?
       git_comment_id = journal.git_comment_id
+      return if git_comment_id.blank?
       api_client.delete_comment(repo, git_comment_id)
     end
   end
