@@ -39,7 +39,8 @@ module Zg
                 issue.description = args['body']
                 issue.tracker = issue.allowed_target_trackers(author).first
                 issue.save!
-                issue.build_ventura_issue(git_issue_id: args['id'], git_issue_number: args['number']).save
+                issue.build_ventura_issue(git_issue_id: args['id'],
+                                          git_issue_number: args['number']).save
               end
             end
           end
