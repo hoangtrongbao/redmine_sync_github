@@ -1,6 +1,7 @@
-haken_v2:
-  priority:
-    'Priority・Low': 'Low'
-    'Priority・Med': 'Normal'
-    'Priority・High': 'High'
-    'Priority・Urgent': 'Urgent'
+zigexn:
+  haken_v2:
+    priority:
+      'Priority・Low': 'Low'
+      'Priority・Med': 'Normal'
+      'Priority・High': 'High'
+      'Priority・Urgent': 'Urgent'

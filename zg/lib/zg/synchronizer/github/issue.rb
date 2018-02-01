@@ -50,8 +50,10 @@ module Zg
           return false unless can_update?
 
           label_name = git_label['name']
-          repo_name = project.split('/').last
-          prioriry = map_label[repo_name]['priority'][label_name]
+          git_repo = project.split('/')
+          repo_user = git_repo.first.downcase
+          repo_name = git_repo.last.downcase
+          prioriry = map_label[repo_user][repo_name]['priority'][label_name]
           tracker = Tracker.find_by(name: label_name)
 
           Issue.find(id).tap do |issue|
