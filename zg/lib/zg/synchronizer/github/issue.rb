@@ -37,7 +37,7 @@ module Zg
                 author = User.find(args['user']['id'])
                 description = args['body']
                 if author.is_a?(AnonymousUser)
-                  description += issue_sync.append_git_user_action(args['user'], Issue::ACTION::CREATE)
+                  description += issue_sync.append_git_user_action(args['user'], Issue::ACTION[:CREATE])
                 end
                 issue.init_journal(author, notes) if notes.present?
                 issue.project = issue_sync.project
