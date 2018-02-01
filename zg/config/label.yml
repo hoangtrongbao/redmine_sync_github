@@ -1,5 +1,6 @@
-Haken:
+haken_v2:
   priority:
-    'Priority・Low': 1
-    'Priority・Med': 2
-    'Priority・High': 3
+    'Priority・Low': 'Low'
+    'Priority・Med': 'Normal'
+    'Priority・High': 'High'
+    'Priority・Urgent': 'Urgent'

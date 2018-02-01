@@ -42,7 +42,7 @@ module Zg
         issue_sync.new(issue_id, repository_payload).update(@payload['changes'],
                                                             issue_payload)
       when 'labeled'
-        issue_sync.new(issue_id, repository_payload).assign_label(payload['label'])
+        issue_sync.new(issue_id, repository_payload).assign_label(@payload['label'], issue_payload)
       when 'unlabeled'
 
       end

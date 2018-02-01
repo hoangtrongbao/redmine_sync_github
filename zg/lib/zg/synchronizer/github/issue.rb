@@ -42,16 +42,24 @@ module Zg
           end
         end
 
-        def assign_label(label)
+        def assign_label(git_label, args)
           return false unless can_update?
 
-          map_label
+          label_name = git_label['name']
+          repo_name = project.split('/').last
+          prioriry = map_label[repo_name]['priority'][label_name]
+          tracker = Tracker.find_by(name: label_name)
 
-          name = label['name']
+          Issue.find(id).tap do |issue|
+            issue.init_journal(User.find(args['user']['id']))
+            issue.tracker = tracker if tracker.present?
+            issue.priority = IssuePriority.find_by(name: prioriry) if prioriry.present?
+            issue.save!
+          end
         end
 
         def map_label
-           @label_config = YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
+           YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
         end
 
         def can_create?
