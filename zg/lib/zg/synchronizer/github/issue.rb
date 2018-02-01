@@ -103,15 +103,12 @@ module Zg
         end
 
         def git_repository
-          repo = {}
           git_repo = project.split('/')
-          repo[:user] = git_repo.first.downcase
-          repo[:name] = git_repo.last.downcase
-          repo
+          { user: git_repo.first.downcase, name: git_repo.last.downcase }
         end
 
         def load_label
-           YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
+          YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
         end
 
         def can_create?
