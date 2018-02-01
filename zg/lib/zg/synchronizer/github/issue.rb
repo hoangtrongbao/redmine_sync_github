@@ -30,7 +30,7 @@ module Zg
           # rubocop:disable Metrics/AbcSize
           # rubocop:disable Metrics/MethodLength
           def create(repo, args)
-            issue_sync = new(args['id'], Repository.find(repo))
+            issue_sync = new(args['id'], Repository.find(repo), args['user'])
             return false unless issue_sync.can_create?
             ::Issue.transaction do
               ::Issue.new.tap do |issue|
