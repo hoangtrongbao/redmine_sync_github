@@ -11,7 +11,7 @@ module Zg
 
       module InstanceMethods
         def git_repo_name
-          ventura_project.git_repo_name
+          ventura_project.try(:git_repo_name)
         end
 
         def sync_with_github?

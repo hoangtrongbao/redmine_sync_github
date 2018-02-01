@@ -5,7 +5,7 @@ module Zg
         class << self
           # rubocop:disable Metrics/LineLength
           def find(id, login = nil)
-            VenturaUser.find_by(git_login_id: id).try(:user) || ::User.find_by_login(login)
+            VenturaUser.find_by(git_login_id: id).try(:user) || ::User.find_by_login(login) || AnonymousUser.first
           end
           # rubocop:enable Metrics/LineLength
         end

@@ -30,8 +30,13 @@ module Zg
       @payload['issue']
     end
 
+    def user_payload
+      @payload['sender']
+    end
+
     private
 
+    # rubocop:disable Metrics/AbcSize
     def process_issue
       issue_sync = Zg::Synchronizer::Github::Issue
       issue_id = issue_payload['id']
@@ -39,15 +44,14 @@ module Zg
       when 'opened'
         issue_sync.create(repository_payload, issue_payload)
       when 'edited'
-        issue_sync.new(issue_id, repository_payload).update(@payload['changes'],
-                                                            @payload['sender'],
-                                                            issue_payload)
+        issue_sync.new(issue_id, repository_payload, user_payload).update(@payload['changes'], issue_payload)
       when 'labeled'
-        issue_sync.new(issue_id, repository_payload).assign_label(@payload['label'], issue_payload)
+        issue_sync.new(issue_id, repository_payload, user_payload).assign_label(@payload['label'], issue_payload)
       when 'unlabeled'
-
+        issue_sync.new(issue_id, repository_payload, user_payload).delete_label(@payload['label'], issue_payload)
       end
     end
+    # rubocop:enable Metrics/AbcSize
 
     # rubocop:disable Metrics/AbcSize
     # rubocop:disable Metrics/MethodLength
@@ -59,7 +63,7 @@ module Zg
       when 'created'
         comment_sync.create(issue_id, repository_payload, comment_payload)
       when 'edited'
-        comment_sync.new(issue_id, repository_payload, comment_id).update(comment_payload)
+        comment_sync.new(issue_id, repository_payload, comment_id).update(comment_payload, user_payload)
       when 'deleted'
         comment_sync.new(issue_id, repository_payload, comment_id).destroy
       end

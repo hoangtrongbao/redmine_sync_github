@@ -8,6 +8,11 @@ module Zg
       class IssueComment
         attr_accessor :issue, :project, :id
 
+        ACTION = {
+          CREATE: 'Created',
+          EDIT: 'Edited'
+        }.freeze
+
         def initialize(issue, project, id)
           @issue = issue
           @project = project
@@ -32,8 +37,13 @@ module Zg
             return false unless comment.can_create?
             ::Issue.transaction do
               ::TimeEntry.new(issue: issue, project: issue.project)
-              issue.init_journal(User.find(args['user']['id']))
-              issue.notes = args['body']
+              author = User.find(args['user']['id'])
+              notes = args['body']
+              if author.is_a?(AnonymousUser)
+                notes += comment.append_git_user_action(args['user'], IssueComment::ACTION[:CREATE])
+              end
+              issue.init_journal(author)
+              issue.notes = notes
               issue.save!
               issue.current_journal.build_ventura_comment(git_comment_id: args['id']).save
             end
@@ -50,16 +60,26 @@ module Zg
           IssueComment.exist?(id)
         end
 
-        def update(args)
+        # rubocop:disable Metrics/LineLength
+        def update(args, user)
           IssueComment.find(id).tap do |comment|
-            comment.notes = args['body']
+            notes = args['body']
+            if User.find(user['id']).is_a?(AnonymousUser)
+              notes += comment.append_git_user_action(args['user'], IssueComment::ACTION[:EDIT])
+            end
+            comment.notes = notes
             comment.save!
           end
         end
+        # rubocop:enable Metrics/LineLength
 
         def destroy
           return false unless IssueComment.find(id)
           IssueComment.find(id).destroy
+        end
+
+        def append_git_user_action(user, action)
+          "\n#{action} by #{user['login']} - #{user['html_url']}"
         end
       end
     end
