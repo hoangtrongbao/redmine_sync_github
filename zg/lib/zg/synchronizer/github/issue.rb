@@ -64,11 +64,11 @@ module Zg
         # rubocop:enable Metrics/MethodLength
 
         def can_create?
-          project.present? && !Issue.exist?(id)
+          project.present? && !Issue.exist?(git_issue['id'])
         end
 
         def can_update?
-          project.present? && Issue.exist?(id)
+          project.present? && Issue.exist?(git_issue['id'])
         end
 
         def assign_label(git_label)
@@ -106,7 +106,7 @@ module Zg
           labels.reverse.each do |label|
             return get_tracker(label['name']) if get_tracker(label['name']).present?
           end
-          Issue.find(id).allowed_target_trackers(user).first
+          Issue.find(git_issue['id']).allowed_target_trackers(user).first
         end
 
         def find_priority(labels)
