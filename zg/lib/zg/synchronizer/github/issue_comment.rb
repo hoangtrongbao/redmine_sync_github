@@ -6,17 +6,14 @@ module Zg
   module Synchronizer
     module Github
       class IssueComment
-        attr_accessor :issue, :project, :id
-
         ACTION = {
           CREATE: 'Created',
           EDIT: 'Edited'
         }.freeze
 
-        def initialize(issue, project, id)
-          @issue = issue
-          @project = project
-          @id = id
+        def initialize(git_issue_id, git_comment)
+          @git_issue_id = git_issue_id
+          @git_comment = git_comment
         end
 
         class << self
@@ -27,49 +24,57 @@ module Zg
           def exist?(id)
             find(id).present?
           end
-
-          # rubocop:disable Metrics/AbcSize
-          # rubocop:disable Metrics/MethodLength
-          def create(issue_id, repo, args)
-            issue = Issue.find(issue_id)
-            project = Repository.find(repo)
-            comment = new(issue, project, args['id'])
-            return false unless comment.can_create?
-            ::Issue.transaction do
-              ::TimeEntry.new(issue: issue, project: issue.project)
-              author = User.find(args['user']['id'])
-              notes = args['body']
-              if author.is_a?(AnonymousUser)
-                notes += comment.append_git_user_action(args['user'], IssueComment::ACTION[:CREATE])
-              end
-              issue.init_journal(author)
-              issue.notes = notes
-              issue.save!
-              issue.current_journal.build_ventura_comment(git_comment_id: args['id']).save
-            end
-          end
-          # rubocop:enable Metrics/AbcSize
-          # rubocop:enable Metrics/MethodLength
         end
 
         def can_create?
-          issue.present? && !IssueComment.exist?(id)
+          find_issue.present? && !IssueComment.exist?(id)
         end
 
         def can_update?
           IssueComment.exist?(id)
         end
 
-        # rubocop:disable Metrics/LineLength
-        def update(args, user)
-          IssueComment.find(id).tap do |comment|
-            notes = args['body']
-            if User.find(user['id']).is_a?(AnonymousUser)
-              notes += comment.append_git_user_action(args['user'], IssueComment::ACTION[:EDIT])
-            end
-            comment.notes = notes
-            comment.save!
+        # rubocop:disable Metrics/AbcSize
+        def create
+          return false unless can_create?
+          ::Issue.transaction do
+            issue = find_issue
+            TimeEntry.new(issue: issue, project: issue.project)
+            issue.init_journal(author)
+            issue.notes = notes
+            issue.save!
+            issue.current_journal.build_ventura_comment(git_comment_id: id).save
           end
+        end
+        # rubocop:enable Metrics/AbcSize
+
+        def id
+          @git_comment['id']
+        end
+
+        def find_issue
+          Issue.find(@git_issue_id)
+        end
+
+        def author
+          User.find(@git_comment['user']['id'])
+        end
+
+        def notes
+          @git_comment['body']
+        end
+
+        def find_comment
+          IssueComment.find(id)
+        end
+
+        # rubocop:disable Metrics/LineLength
+        def update(git_user)
+          content = notes
+          content += append_git_user_action(git_user, IssueComment::ACTION[:EDIT]) if author.is_a?(AnonymousUser)
+          comment = find_comment
+          comment.notes = content
+          comment.save!
         end
         # rubocop:enable Metrics/LineLength
 
