@@ -37,6 +37,7 @@ module Zg
     private
 
     # rubocop:disable Metrics/AbcSize
+    # rubocop:disable Metrics/CyclomaticComplexity
     def process_issue
       issue_sync = Zg::Synchronizer::Github::Issue
       issue_id = issue_payload['id']
@@ -55,6 +56,7 @@ module Zg
         issue_sync.new(issue_id, repository_payload, user_payload).delete_label(@payload['label'], issue_payload)
       end
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
     # rubocop:enable Metrics/AbcSize
 
     # rubocop:disable Metrics/AbcSize
