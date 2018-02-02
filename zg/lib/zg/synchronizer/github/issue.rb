@@ -175,7 +175,8 @@ module Zg
           return false unless can_create?
           ::Issue.transaction do
             ::Issue.new.tap do |issue|
-              issue.create!(create_params)
+              issue.safe_attributes = create_params, author
+              issue.save!
               issue.build_ventura_issue(git_issue_id: id,
                                         git_issue_number: number).save
             end
