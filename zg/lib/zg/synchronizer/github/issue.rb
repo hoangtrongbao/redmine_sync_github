@@ -45,7 +45,7 @@ module Zg
           return false unless can_update?
           Issue.find(@git_issue['id']).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:EDIT]))
-            issue.safe_attributes = update_params(diffs.keys), author
+            issue.attributes = update_params(diffs.keys)
             issue.save!
           end
         end
@@ -103,7 +103,7 @@ module Zg
           labels.reverse.each do |label|
             return get_tracker(label['name']) if get_tracker(label['name']).present?
           end
-          Issue.find(@git_issue['id']).allowed_target_trackers(user).first
+          Tracker.first
         end
 
         def find_priority(labels)
@@ -157,11 +157,6 @@ module Zg
           User.find(@git_user['id'])
         end
 
-        def tracker
-          return nil if Issue.find(@git_issue['id']).blank?
-          Issue.find(@git_issue['id']).allowed_target_trackers(author).first
-        end
-
         def project
           Repository.find(@git_repo)
         end
@@ -175,7 +170,7 @@ module Zg
           return false unless can_create?
           ::Issue.transaction do
             ::Issue.new.tap do |issue|
-              issue.safe_attributes = create_params, author
+              issue.attributes = create_params
               issue.save!
               issue.build_ventura_issue(git_issue_id: id,
                                         git_issue_number: number).save
@@ -187,18 +182,19 @@ module Zg
 
         def create_params
           params = {}
-          params[:subject] = subject
-          params[:description] = description
-          params[:project] = project
-          params[:tracker] = tracker
-          params[:status_id] = Issue::STATUS[:NEW]
+          params['subject'] = subject
+          params['author_id'] = author.id
+          params['description'] = description
+          params['tracker_id'] = 1
+          params['project_id'] = project.id
+          params['status_id'] = Issue::STATUS[:NEW]
           params
         end
 
         def update_params(diffs_keys)
           params = {}
-          params[:subject] = subject if diffs_keys.include?('title')
-          params[:description] = description if diffs_keys.include?('body')
+          params['subject'] = subject if diffs_keys.include?('title')
+          params['description'] = description if diffs_keys.include?('body')
           params
         end
 

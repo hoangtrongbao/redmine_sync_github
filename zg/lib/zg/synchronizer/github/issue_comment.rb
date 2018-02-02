@@ -27,7 +27,7 @@ module Zg
         end
 
         def can_create?
-          issue.present? && !IssueComment.exist?(id)
+          find_issue.present? && !IssueComment.exist?(id)
         end
 
         def can_update?
@@ -38,6 +38,7 @@ module Zg
         def create
           return false unless can_create?
           ::Issue.transaction do
+            issue = find_issue
             TimeEntry.new(issue: issue, project: issue.project)
             issue.init_journal(author)
             issue.notes = notes
@@ -51,8 +52,8 @@ module Zg
           @git_comment['id']
         end
 
-        def issue
-          Issue.find(git_issue_id)
+        def find_issue
+          Issue.find(@git_issue_id)
         end
 
         def author
@@ -63,7 +64,7 @@ module Zg
           @git_comment['body']
         end
 
-        def issue_comment
+        def find_comment
           IssueComment.find(id)
         end
 
@@ -71,8 +72,9 @@ module Zg
         def update(git_user)
           content = notes
           content += append_git_user_action(git_user, IssueComment::ACTION[:EDIT]) if author.is_a?(AnonymousUser)
-          issue_comment.notes = content
-          issue_comment.save!
+          comment = find_comment
+          comment.notes = content
+          comment.save!
         end
         # rubocop:enable Metrics/LineLength
 
