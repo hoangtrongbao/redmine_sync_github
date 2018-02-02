@@ -52,6 +52,7 @@ module Zg
 
         def close
           return false unless can_update?
+          return false if Issue.find(@git_issue['id']).status.is_closed == true
           Issue.find(@git_issue['id']).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:CLOSE]))
             issue.status_id = Issue::STATUS[:CLOSE]
@@ -61,6 +62,7 @@ module Zg
 
         def reopen
           return false unless can_update?
+          return false if Issue.find(@git_issue['id']).status.is_closed == false
           Issue.find(@git_issue['id']).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:REOPEN]))
             issue.status_id = Issue::STATUS[:NEW]
