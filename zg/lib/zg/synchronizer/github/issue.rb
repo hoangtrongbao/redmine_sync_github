@@ -50,7 +50,7 @@ module Zg
           return false unless can_update?
           Issue.find(@git_issue['id']).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:EDIT]))
-            issue.safe_attributes = update_params(diffs.keys)
+            issue.safe_attributes = update_params(diffs.keys), author
             issue.save!
           end
         end
