@@ -66,22 +66,19 @@ module Zg
     # rubocop:enable Metrics/CyclomaticComplexity
     # rubocop:enable Metrics/AbcSize
 
-    # rubocop:disable Metrics/AbcSize
-    # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Metrics/LineLength
     def process_issue_comment
-      comment_sync = Zg::Synchronizer::Github::IssueComment
-      comment_id = comment_payload['id']
-      issue_id = issue_payload['id']
+      comment_sync = Zg::Synchronizer::Github::IssueComment.new(issue_payload['id'],
+                                                                comment_payload)
       case action
       when 'created'
-        comment_sync.create(issue_id, repository_payload, comment_payload)
+        comment_sync.create
       when 'edited'
-        comment_sync.new(issue_id, repository_payload, comment_id).update(comment_payload, user_payload)
+        comment_sync.update(user_payload)
       when 'deleted'
-        comment_sync.new(issue_id, repository_payload, comment_id).destroy
+        comment_sync.destroy
       end
     end
-    # rubocop:enable Metrics/MethodLength
-    # rubocop:enable Metrics/AbcSize
+    # rubocop:enable Metrics/LineLength
   end
 end
