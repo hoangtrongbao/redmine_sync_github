@@ -34,28 +34,33 @@ module Zg
       @payload['sender']
     end
 
+    def label_payload
+      @payload['label']
+    end
+
     private
 
     # rubocop:disable Metrics/AbcSize
     # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/LineLength
     def process_issue
       issue_sync = Zg::Synchronizer::Github::Issue
-      issue_id = issue_payload['id']
       case action
       when 'opened'
         issue_sync.create(repository_payload, issue_payload)
       when 'edited'
-        issue_sync.new(issue_id, repository_payload, user_payload).update(@payload['changes'], user_payload, issue_payload)
+        issue_sync.new(issue_payload, repository_payload, user_payload).update(@payload['changes'])
       when 'closed'
-        issue_sync.new(issue_id, repository_payload, user_payload).close(user_payload, issue_payload)
+        issue_sync.new(issue_payload, repository_payload, user_payload).close
       when 'reopened'
-        issue_sync.new(issue_id, repository_payload, user_payload).reopen(user_payload, issue_payload)
+        issue_sync.new(issue_payload, repository_payload, user_payload).reopen
       when 'labeled'
-        issue_sync.new(issue_id, repository_payload, user_payload).assign_label(@payload['label'], issue_payload)
+        issue_sync.new(issue_payload, repository_payload, user_payload).assign_label(label_payload)
       when 'unlabeled'
-        issue_sync.new(issue_id, repository_payload, user_payload).delete_label(@payload['label'], issue_payload)
+        issue_sync.new(issue_payload, repository_payload, user_payload).delete_label(label_payload)
       end
     end
+    # rubocop:enable Metrics/LineLength
     # rubocop:enable Metrics/CyclomaticComplexity
     # rubocop:enable Metrics/AbcSize
 

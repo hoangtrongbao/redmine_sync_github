@@ -5,7 +5,7 @@ module Zg
   module Synchronizer
     module Github
       class Issue
-        attr_accessor :id, :project, :user
+        attr_accessor :git_issue, :project, :user
 
         ACTION = {
           CREATE: 'Created',
@@ -14,10 +14,15 @@ module Zg
           REOPEN: 'Reopen'
         }.freeze
 
-        def initialize(id, project, user)
-          @id = id
-          @project = project
-          @user = User.find(user['id'])
+        STATUS = {
+          NEW: 1,
+          CLOSE: 5
+        }.freeze
+
+        def initialize(git_issue, git_repo, git_user)
+          @git_issue = git_issue
+          @project = git_repo
+          @user = git_user
         end
 
         class << self
@@ -36,7 +41,7 @@ module Zg
             return false unless issue_sync.can_create?
             ::Issue.transaction do
               ::Issue.new.tap do |issue|
-                author = User.find(args['user']['id'])
+                author = issue_sync.find_user
                 description = args['body']
                 if author.is_a?(AnonymousUser)
                   description += issue_sync.append_git_user_action(args['user'], Issue::ACTION[:CREATE])
@@ -58,7 +63,15 @@ module Zg
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/MethodLength
 
-        def assign_label(git_label, args)
+        def can_create?
+          project.present? && !Issue.exist?(id)
+        end
+
+        def can_update?
+          project.present? && Issue.exist?(id)
+        end
+
+        def assign_label(git_label)
           return false unless can_update?
           # Mapping tracker and priority
           priority = get_priority(git_label['name'])
@@ -67,15 +80,15 @@ module Zg
           update_label(priority, tracker)
         end
 
-        def delete_label(git_label, args)
+        def delete_label(git_label)
           return false unless can_update?
           # Mapping tracker and priority
           priority = get_priority(git_label['name'])
           tracker = get_tracker(git_label['name'])
 
           # Find priority and tracker after delete
-          priority = find_priority(args['labels']) if priority.present?
-          tracker = find_tracker(args['labels']) if tracker.present?
+          priority = find_priority(git_issue['labels']) if priority.present?
+          tracker = find_tracker(git_issue['labels']) if tracker.present?
 
           update_label(priority, tracker)
         end
@@ -125,58 +138,48 @@ module Zg
         end
         # rubocop:enable Metrics/LineLength
 
-        def can_create?
-          project.present? && !Issue.exist?(id)
-        end
-
-        def can_update?
-          project.present? && Issue.exist?(id)
-        end
-
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
-        def update(diffs, edit_user, args)
+        def update(diffs)
           return false unless can_update?
           diffs_keys = diffs.keys
-          Issue.find(id).tap do |issue|
-            author = User.find(edit_user['id'])
+          Issue.find(git_issue['id']).tap do |issue|
+            author = find_user
             if author.is_a?(AnonymousUser)
               author = issue.author
-              notes = append_git_user_action(edit_user, Issue::ACTION[:EDIT])
+              notes = append_git_user_action(user, Issue::ACTION[:EDIT])
             end
             issue.init_journal(author, (notes || ''))
-            issue.subject = args['title'] if diffs_keys.include?('title')
-            issue.description = args['body'] if diffs_keys.include?('body')
+            issue.subject = issue['title'] if diffs_keys.include?('title')
+            issue.description = issue['body'] if diffs_keys.include?('body')
             issue.save!
           end
         end
 
-        def close(edit_user, args)
+        def close
           return false unless can_update?
-
-          Issue.find(id).tap do |issue|
-            author = User.find(edit_user['id'])
+          Issue.find(git_issue['id']).tap do |issue|
+            author = find_user
             if author.is_a?(AnonymousUser)
               author = issue.author
-              notes = append_git_user_action(edit_user, Issue::ACTION[:CLOSE])
+              notes = append_git_user_action(user, Issue::ACTION[:CLOSE])
             end
             issue.init_journal(author, (notes || ''))
-            issue.status_id = 5
+            issue.status_id = Issue::STATUS[:CLOSE]
             issue.save!
           end
         end
 
-        def reopen(edit_user, args)
+        def reopen
           return false unless can_update?
-
           Issue.find(id).tap do |issue|
-            author = User.find(edit_user['id'])
+            author = find_user
             if author.is_a?(AnonymousUser)
               author = issue.author
-              notes = append_git_user_action(edit_user, Issue::ACTION[:REOPEN])
+              notes = append_git_user_action(user, Issue::ACTION[:REOPEN])
             end
             issue.init_journal(author, (notes || ''))
-            issue.status_id = 1
+            issue.status_id = Issue::STATUS[:NEW]
             issue.save!
           end
         end
@@ -186,6 +189,10 @@ module Zg
 
         def append_git_user_action(user, action)
           "#{action} by #{user['login']} - #{user['html_url']}"
+        end
+
+        def find_user
+          User.find(user['id'])
         end
       end
     end
