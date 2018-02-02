@@ -5,8 +5,6 @@ module Zg
   module Synchronizer
     module Github
       class Issue
-        attr_accessor :git_issue, :project, :user
-
         ACTION = {
           CREATE: 'Created',
           EDIT: 'Edited',
@@ -21,8 +19,8 @@ module Zg
 
         def initialize(git_issue, git_repo, git_user)
           @git_issue = git_issue
-          @project = git_repo
-          @user = git_user
+          @git_repo = git_repo
+          @git_user = git_user
         end
 
         class << self
@@ -34,41 +32,45 @@ module Zg
             find(id).present?
           end
 
-          # rubocop:disable Metrics/AbcSize
-          # rubocop:disable Metrics/MethodLength
-          def create(repo, args)
-            issue_sync = new(args['id'], Repository.find(repo), args['user'])
-            return false unless issue_sync.can_create?
-            ::Issue.transaction do
-              ::Issue.new.tap do |issue|
-                author = issue_sync.find_user
-                description = args['body']
-                if author.is_a?(AnonymousUser)
-                  description += issue_sync.append_git_user_action(args['user'], Issue::ACTION[:CREATE])
-                end
-                issue.init_journal(author, notes) if notes.present?
-                issue.project = issue_sync.project
-                issue.author = author
-                issue.subject = args['title']
-                issue.status_id = 1
-                issue.description = description
-                issue.tracker = issue.allowed_target_trackers(author).first
-                issue.save!
-                issue.build_ventura_issue(git_issue_id: args['id'],
-                                          git_issue_number: args['number']).save
-              end
-            end
+          def create(git_repo, git_issue)
+            issue_sync = new(git_issue, git_repo, git_issue['user'])
+            issue_sync.create!
           end
         end
-        # rubocop:enable Metrics/AbcSize
-        # rubocop:enable Metrics/MethodLength
 
         def can_create?
-          project.present? && !Issue.exist?(id)
+          project.present? && !Issue.exist?(@git_issue['id'])
         end
 
         def can_update?
-          project.present? && Issue.exist?(id)
+          project.present? && Issue.exist?(@git_issue['id'])
+        end
+
+        def update(diffs)
+          return false unless can_update?
+          Issue.find(@git_issue['id']).tap do |issue|
+            issue.init_journal(author, notes(Issue::ACTION[:EDIT]))
+            issue.safe_attributes = update_params(diffs.keys)
+            issue.save!
+          end
+        end
+
+        def close
+          return false unless can_update?
+          Issue.find(@git_issue['id']).tap do |issue|
+            issue.init_journal(author, notes(Issue::ACTION[:CLOSE]))
+            issue.status_id = Issue::STATUS[:CLOSE]
+            issue.save!
+          end
+        end
+
+        def reopen
+          return false unless can_update?
+          Issue.find(@git_issue['id']).tap do |issue|
+            issue.init_journal(author, notes(Issue::ACTION[:REOPEN]))
+            issue.status_id = Issue::STATUS[:NEW]
+            issue.save!
+          end
         end
 
         def assign_label(git_label)
@@ -80,6 +82,15 @@ module Zg
           update_label(priority, tracker)
         end
 
+        def update_label(priority, tracker)
+          Issue.find(@git_issue['id']).tap do |issue|
+            issue.init_journal(author)
+            issue.priority = priority if priority.present?
+            issue.tracker = tracker if tracker.present?
+            issue.save!
+          end
+        end
+
         def delete_label(git_label)
           return false unless can_update?
           # Mapping tracker and priority
@@ -87,26 +98,17 @@ module Zg
           tracker = get_tracker(git_label['name'])
 
           # Find priority and tracker after delete
-          priority = find_priority(git_issue['labels']) if priority.present?
-          tracker = find_tracker(git_issue['labels']) if tracker.present?
+          priority = find_priority(@git_issue['labels']) if priority.present?
+          tracker = find_tracker(@git_issue['labels']) if tracker.present?
 
           update_label(priority, tracker)
-        end
-
-        def update_label(priority, tracker)
-          Issue.find(git_issue['id']).tap do |issue|
-            issue.init_journal(user)
-            issue.priority = priority if priority.present?
-            issue.tracker = tracker if tracker.present?
-            issue.save!
-          end
         end
 
         def find_tracker(labels)
           labels.reverse.each do |label|
             return get_tracker(label['name']) if get_tracker(label['name']).present?
           end
-          Issue.find(id).allowed_target_trackers(user).first
+          Issue.find(@git_issue['id']).allowed_target_trackers(user).first
         end
 
         def find_priority(labels)
@@ -127,6 +129,83 @@ module Zg
           IssuePriority.find_by(name: priority_name)
         end
 
+        # rubocop:enable Metrics/MethodLength
+        # rubocop:enable Metrics/AbcSize
+
+        def append_git_user_action(user, action)
+          "\n#{action} by #{user['login']} - #{user['html_url']}"
+        end
+
+        def find_user
+          User.find(user['id'])
+        end
+
+        def id
+          @git_issue['id']
+        end
+
+        def number
+          @git_issue['number']
+        end
+
+        def subject
+          @git_issue['title']
+        end
+
+        def description
+          desc = @git_issue['body']
+          desc += append_git_user_action(args['user'], Issue::ACTION[:CREATE]) if author.is_a?(AnonymousUser)
+          desc
+        end
+
+        def author
+          User.find(@git_user['id'])
+        end
+
+        def tracker
+          return nil if Issue.find(@git_issue['id']).blank?
+          Issue.find(@git_issue['id']).allowed_target_trackers(author).first
+        end
+
+        def project
+          Repository.find(@git_repo)
+        end
+
+        def notes(type = nil)
+          return '' unless author.is_a?(AnonymousUser)
+          append_git_user_action(author, type)
+        end
+
+        def create
+          return false unless can_create?
+          ::Issue.transaction do
+            ::Issue.new.tap do |issue|
+              issue.create!(create_params)
+              issue.build_ventura_issue(git_issue_id: id,
+                                        git_issue_number: number).save
+            end
+          end
+        end
+
+        private
+
+        def create_params
+          params = {}
+          params[:subject] = subject
+          params[:description] = description
+          params[:project] = project
+          params[:tracker] = tracker
+          params[:status_id] = Issue::STATUS[:NEW]
+          params
+        end
+
+        def update_params(diffs_keys)
+          params = {}
+          params[:subject] = subject if diffs_keys.include?('title')
+          params[:description] = description if diffs_keys.include?('body')
+          params
+        end
+
         def git_repository
           git_repo = project.split('/')
           { user: git_repo.first.downcase, name: git_repo.last.downcase }
@@ -137,63 +216,6 @@ module Zg
           YAML.load_file(File.join(Redmine::Plugin.find(:zg).directory, 'config/label.yml'))
         end
         # rubocop:enable Metrics/LineLength
-
-        # rubocop:disable Metrics/MethodLength
-        # rubocop:disable Metrics/AbcSize
-        def update(diffs)
-          return false unless can_update?
-          diffs_keys = diffs.keys
-          Issue.find(git_issue['id']).tap do |issue|
-            author = find_user
-            if author.is_a?(AnonymousUser)
-              author = issue.author
-              notes = append_git_user_action(user, Issue::ACTION[:EDIT])
-            end
-            issue.init_journal(author, (notes || ''))
-            issue.subject = issue['title'] if diffs_keys.include?('title')
-            issue.description = issue['body'] if diffs_keys.include?('body')
-            issue.save!
-          end
-        end
-
-        def close
-          return false unless can_update?
-          Issue.find(git_issue['id']).tap do |issue|
-            author = find_user
-            if author.is_a?(AnonymousUser)
-              author = issue.author
-              notes = append_git_user_action(user, Issue::ACTION[:CLOSE])
-            end
-            issue.init_journal(author, (notes || ''))
-            issue.status_id = Issue::STATUS[:CLOSE]
-            issue.save!
-          end
-        end
-
-        def reopen
-          return false unless can_update?
-          Issue.find(git_issue['id']).tap do |issue|
-            author = find_user
-            if author.is_a?(AnonymousUser)
-              author = issue.author
-              notes = append_git_user_action(user, Issue::ACTION[:REOPEN])
-            end
-            issue.init_journal(author, (notes || ''))
-            issue.status_id = Issue::STATUS[:NEW]
-            issue.save!
-          end
-        end
-
-        # rubocop:enable Metrics/MethodLength
-        # rubocop:enable Metrics/AbcSize
-
-        def append_git_user_action(user, action)
-          "#{action} by #{user['login']} - #{user['html_url']}"
-        end
-
-        def find_user
-          User.find(user['id'])
-        end
       end
     end
   end

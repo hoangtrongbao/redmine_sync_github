@@ -40,27 +40,29 @@ module Zg
 
     private
 
+    # rubocop:disable Metrics/MethodLength
     # rubocop:disable Metrics/AbcSize
     # rubocop:disable Metrics/CyclomaticComplexity
-    # rubocop:disable Metrics/LineLength
     def process_issue
-      issue_sync = Zg::Synchronizer::Github::Issue
+      issue_sync = Zg::Synchronizer::Github::Issue.new(issue_payload,
+                                                       repository_payload,
+                                                       user_payload)
       case action
       when 'opened'
-        issue_sync.create(repository_payload, issue_payload)
+        issue_sync.create
       when 'edited'
-        issue_sync.new(issue_payload, repository_payload, user_payload).update(@payload['changes'])
+        issue_sync.update(@payload['changes'])
       when 'closed'
-        issue_sync.new(issue_payload, repository_payload, user_payload).close
+        issue_sync.close
       when 'reopened'
-        issue_sync.new(issue_payload, repository_payload, user_payload).reopen
+        issue_sync.reopen
       when 'labeled'
-        issue_sync.new(issue_payload, repository_payload, user_payload).assign_label(label_payload)
+        issue_sync.assign_label(label_payload)
       when 'unlabeled'
-        issue_sync.new(issue_payload, repository_payload, user_payload).delete_label(label_payload)
+        issue_sync.delete_label(label_payload)
       end
     end
-    # rubocop:enable Metrics/LineLength
+    # rubocop:enable Metrics/MethodLength
     # rubocop:enable Metrics/CyclomaticComplexity
     # rubocop:enable Metrics/AbcSize
 
