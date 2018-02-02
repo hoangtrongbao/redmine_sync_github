@@ -163,7 +163,7 @@ module Zg
 
         def notes(type = nil)
           return '' unless author.is_a?(AnonymousUser)
-          append_git_user_action(author, type)
+          append_git_user_action(@git_user, type)
         end
 
         def create
