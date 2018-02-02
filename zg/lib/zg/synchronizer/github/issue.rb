@@ -94,7 +94,7 @@ module Zg
         end
 
         def update_label(priority, tracker)
-          Issue.find(id).tap do |issue|
+          Issue.find(git_issue['id']).tap do |issue|
             issue.init_journal(user)
             issue.priority = priority if priority.present?
             issue.tracker = tracker if tracker.present?
@@ -172,7 +172,7 @@ module Zg
 
         def reopen
           return false unless can_update?
-          Issue.find(id).tap do |issue|
+          Issue.find(git_issue['id']).tap do |issue|
             author = find_user
             if author.is_a?(AnonymousUser)
               author = issue.author
