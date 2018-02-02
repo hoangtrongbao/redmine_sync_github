@@ -120,7 +120,7 @@ module Zg
         def get_priority(label_name)
           repo_user = git_repository[:user]
           repo_name = git_repository[:name]
-          priority_name = load_label[repo_user][repo_name]['priority'][label_name]
+          priority_name = load_label.try(:[], repo_user).try(:[], repo_name).try(:[], 'priority').try(:[], label_name)
           IssuePriority.find_by(name: priority_name)
         end
 
