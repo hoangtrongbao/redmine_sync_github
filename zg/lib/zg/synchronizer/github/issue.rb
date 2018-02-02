@@ -31,11 +31,6 @@ module Zg
           def exist?(id)
             find(id).present?
           end
-
-          def create(git_repo, git_issue)
-            issue_sync = new(git_issue, git_repo, git_issue['user'])
-            issue_sync.create!
-          end
         end
 
         def can_create?
@@ -207,7 +202,7 @@ module Zg
         end
 
         def git_repository
-          git_repo = project.split('/')
+          git_repo = @git_repo.split('/')
           { user: git_repo.first.downcase, name: git_repo.last.downcase }
         end
 
