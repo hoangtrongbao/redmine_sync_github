@@ -30,7 +30,7 @@ module Zg
     end
 
     def update_issue
-      api_client.update_issue(repo, git_issue_number, issue.subject, issue.description)
+      api_client.update_issue(repo, git_issue_number, issue.subject, issue.description, state: issue.status.is_closed ? 'closed' : 'open' )
     end
 
     def add_comment(journal)
