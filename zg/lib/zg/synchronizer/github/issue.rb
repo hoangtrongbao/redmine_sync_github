@@ -149,7 +149,7 @@ module Zg
 
         def description
           desc = @git_issue['body']
-          desc += append_git_user_action(args['user'], Issue::ACTION[:CREATE]) if author.is_a?(AnonymousUser)
+          desc += append_git_user_action(@git_issue['user'], Issue::ACTION[:CREATE]) if author.is_a?(AnonymousUser)
           desc
         end
 
