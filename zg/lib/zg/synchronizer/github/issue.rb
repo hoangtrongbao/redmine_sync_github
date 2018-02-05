@@ -59,7 +59,7 @@ module Zg
         end
 
         def close
-          return false unless can_update? && closed?
+          return false unless can_update? && opened?
           Issue.find(id).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:CLOSE]))
             issue.status_id = Issue::STATUS[:CLOSE]
@@ -68,7 +68,7 @@ module Zg
         end
 
         def reopen
-          return false unless can_update? && opened?
+          return false unless can_update? && closed?
           Issue.find(id).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:REOPEN]))
             issue.status_id = Issue::STATUS[:NEW]
