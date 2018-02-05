@@ -1,0 +1,23 @@
+<% unless User.current.authorized_github? %>
+  <%= form_tag zg_git_oauth_path do %>
+    <fieldset class="box tabular">
+      <legend>Github OAuth</legend>
+      <p>
+        <%= label_tag 'zg_username' do %>
+          Username
+          <span class="required">*</span>
+        <% end %>
+        <%= text_field_tag 'zg[username]' %>
+      </p>
+      <p>
+        <%= label_tag 'zg_password' do %>
+          Password
+          <span class="required">*</span>
+        <% end %>
+        <%= password_field_tag 'zg[password]' %>
+      </p>
+
+      <%= submit_tag 'Authenticate' %>
+    </fieldset>
+  <% end %>
+<% end %>

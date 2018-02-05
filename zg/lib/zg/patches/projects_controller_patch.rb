@@ -4,7 +4,7 @@ module Zg
       def self.included(base)
         base.send(:include, InstanceMethods)
         base.class_eval do
-          before_action :validate_github_authorized, except: :index, :if => lambda { User.current.logged? }
+          before_action :validate_github_authorized, except: :index, if: -> { User.current.logged? }
           after_action :build_git_repo_url, only: %i[create update]
         end
       end
@@ -14,7 +14,7 @@ module Zg
           return unless find_project.sync_with_github?
           return if User.current.authorized_github? || !User.current.logged?
           flash[:error] = 'Please authorize your account with Github'
-          redirect_to edit_user_path(User.current, tab: 'git_oauth')
+          redirect_to my_account_path(User.current)
         end
 
         def build_git_repo_url

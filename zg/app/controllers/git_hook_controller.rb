@@ -10,7 +10,7 @@ class GitHookController < ApplicationController
       flash[:error] = e.message
     end
 
-    redirect_to edit_user_path(User.current, tab: 'git_oauth')
+    redirect_to my_account_path(User.current)
   end
 
   def index
