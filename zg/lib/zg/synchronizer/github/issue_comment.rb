@@ -34,7 +34,6 @@ module Zg
           IssueComment.exist?(id)
         end
 
-        # rubocop:disable Metrics/AbcSize
         def create
           return false unless can_create?
           ::Issue.transaction do
@@ -46,7 +45,6 @@ module Zg
             issue.current_journal.build_ventura_comment(git_comment_id: id).save
           end
         end
-        # rubocop:enable Metrics/AbcSize
 
         def id
           @git_comment['id']
