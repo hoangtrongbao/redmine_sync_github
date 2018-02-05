@@ -4,7 +4,7 @@ module Zg
       def self.included(base)
         base.send(:include, InstanceMethods)
         base.class_eval do
-          before_action :validate_github_authorized, except: :index
+          before_action :validate_github_authorized, except: :index, :if => lambda { User.current.logged? }
           after_action :build_git_repo_url, only: %i[create update]
         end
       end
