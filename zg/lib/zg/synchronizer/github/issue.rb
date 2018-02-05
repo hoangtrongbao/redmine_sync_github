@@ -41,9 +41,17 @@ module Zg
           project.present? && Issue.exist?(@git_issue['id'])
         end
 
+        def closed?
+          Issue.find(id).status.is_closed
+        end
+
+        def opened?
+          !closed?
+        end
+
         def update(diffs)
           return false unless can_update?
-          Issue.find(@git_issue['id']).tap do |issue|
+          Issue.find(id).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:EDIT]))
             issue.attributes = update_params(diffs.keys)
             issue.save!
@@ -51,9 +59,8 @@ module Zg
         end
 
         def close
-          return false unless can_update?
-          return false if Issue.find(@git_issue['id']).status.is_closed == true
-          Issue.find(@git_issue['id']).tap do |issue|
+          return false unless can_update? && closed?
+          Issue.find(id).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:CLOSE]))
             issue.status_id = Issue::STATUS[:CLOSE]
             issue.save!
@@ -61,9 +68,8 @@ module Zg
         end
 
         def reopen
-          return false unless can_update?
-          return false if Issue.find(@git_issue['id']).status.is_closed == false
-          Issue.find(@git_issue['id']).tap do |issue|
+          return false unless can_update? && opened?
+          Issue.find(id).tap do |issue|
             issue.init_journal(author, notes(Issue::ACTION[:REOPEN]))
             issue.status_id = Issue::STATUS[:NEW]
             issue.save!
@@ -80,7 +86,7 @@ module Zg
         end
 
         def update_label(priority, tracker)
-          Issue.find(@git_issue['id']).tap do |issue|
+          Issue.find(id).tap do |issue|
             issue.init_journal(author)
             issue.priority = priority if priority.present?
             issue.tracker = tracker if tracker.present?
@@ -122,7 +128,10 @@ module Zg
         def get_priority(label_name)
           repo_user = git_repository[:user]
           repo_name = git_repository[:name]
-          priority_name = load_label.try(:[], repo_user).try(:[], repo_name).try(:[], 'priority').try(:[], label_name)
+          priority_name = load_label.try(:[], repo_user)
+                                    .try(:[], repo_name)
+                                    .try(:[], 'priority')
+                                    .try(:[], label_name)
           IssuePriority.find_by(name: priority_name)
         end
 
