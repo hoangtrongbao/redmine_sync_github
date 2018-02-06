@@ -122,7 +122,8 @@ module Zg
         end
 
         def get_tracker(label_name)
-          Tracker.find_by(name: label_name)
+          tracker = Tracker.find_by(name: label_name)
+          project.trackers.include?(tracker) ? tracker : nil
         end
 
         def get_priority(label_name)
@@ -132,6 +133,7 @@ module Zg
                                     .try(:[], repo_name)
                                     .try(:[], 'priority')
                                     .try(:[], label_name)
+          priority_name ||= label_name
           IssuePriority.find_by(name: priority_name)
         end
 
